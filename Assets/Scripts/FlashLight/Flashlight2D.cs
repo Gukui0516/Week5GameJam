@@ -39,7 +39,7 @@ public class Flashlight2D : MonoBehaviour
     public UnityEvent<Collider2D> OnTargetExit;
 
     // Runtime objects
-    Transform wedgeRoot;
+    GameObject wedgeObj;
     MeshFilter meshFilter;
     MeshRenderer meshRenderer;
     PolygonCollider2D polyCollider;
@@ -52,10 +52,12 @@ public class Flashlight2D : MonoBehaviour
     float _lastRange, _lastAngle;
     int _lastSegs;
     Color _lastColor;
+    bool _isInitialized = false;
 
     void Reset()
     {
         worldCamera = Camera.main;
+        DestroyOldChild();
         BuildRuntimeObjects();
         RebuildGeometry();
         ApplyVisual();
@@ -68,30 +70,53 @@ public class Flashlight2D : MonoBehaviour
         RebuildGeometry();
         ApplyVisual();
         ApplyToggle();
+        _isInitialized = true;
     }
 
     void OnEnable()
     {
-        ApplyToggle();
+        if (_isInitialized)
+        {
+            ApplyToggle();
+        }
     }
 
     void OnValidate()
     {
-        BuildRuntimeObjects();
-        RebuildGeometry();
-        ApplyVisual();
-        ApplyToggle();
+        // OnValidate에서는 가벼운 작업만
+        if (Application.isPlaying)
+        {
+            BuildRuntimeObjects();
+            RebuildGeometry();
+            ApplyVisual();
+            ApplyToggle();
+        }
+        else
+        {
+            // 에디터 모드에서는 다음 프레임에 실행
+            UnityEditor.EditorApplication.delayCall += () =>
+            {
+                if (this != null)
+                {
+                    BuildRuntimeObjects();
+                    RebuildGeometry();
+                    ApplyVisual();
+                    ApplyToggle();
+                }
+            };
+        }
     }
 
     void Update()
     {
         if (worldCamera == null) worldCamera = Camera.main;
+        if (wedgeObj == null) return;
 
         Vector2 dir = GetAimDirection();
         if (dir.sqrMagnitude > 0.0001f)
         {
             float angleZ = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
-            wedgeRoot.rotation = Quaternion.Euler(0, 0, angleZ);
+            wedgeObj.transform.rotation = Quaternion.Euler(0, 0, angleZ);
         }
 
         if (!Mathf.Approximately(_lastRange, range) ||
@@ -106,7 +131,7 @@ public class Flashlight2D : MonoBehaviour
             ApplyVisual();
         }
 
-        wedgeRoot.position = transform.position;
+        wedgeObj.transform.position = transform.position;
     }
 
     Vector2 GetAimDirection()
@@ -126,50 +151,58 @@ public class Flashlight2D : MonoBehaviour
         return Vector2.right;
     }
 
+    void DestroyOldChild()
+    {
+        // 기존 자식 오브젝트 정리
+        Transform old = transform.Find("_Flashlight2D");
+        if (old != null)
+        {
+            if (Application.isPlaying)
+                Destroy(old.gameObject);
+            else
+                DestroyImmediate(old.gameObject);
+        }
+    }
+
     void BuildRuntimeObjects()
     {
-        if (wedgeRoot == null)
+        if (wedgeObj == null)
         {
-            var go = transform.Find("_Flashlight2D")?.gameObject;
-            if (go == null)
-            {
-                go = new GameObject("_Flashlight2D");
-                go.transform.SetParent(transform, false);
-            }
-            wedgeRoot = go.transform;
-            wedgeRoot.hideFlags = HideFlags.HideInHierarchy;
+            DestroyOldChild();
+            
+            wedgeObj = new GameObject("_Flashlight2D");
+            wedgeObj.transform.SetParent(transform, false);
+            wedgeObj.hideFlags = HideFlags.HideInHierarchy;
+
+            meshFilter = wedgeObj.AddComponent<MeshFilter>();
+            meshRenderer = wedgeObj.AddComponent<MeshRenderer>();
+            polyCollider = wedgeObj.AddComponent<PolygonCollider2D>();
+            rb2d = wedgeObj.AddComponent<Rigidbody2D>();
+
+            polyCollider.isTrigger = true;
+            rb2d.bodyType = RigidbodyType2D.Kinematic;
+            rb2d.simulated = true;
         }
-
-        meshFilter = wedgeRoot.GetComponent<MeshFilter>();
-        if (meshFilter == null) meshFilter = wedgeRoot.gameObject.AddComponent<MeshFilter>();
-
-        meshRenderer = wedgeRoot.GetComponent<MeshRenderer>();
-        if (meshRenderer == null) meshRenderer = wedgeRoot.gameObject.AddComponent<MeshRenderer>();
+        else
+        {
+            // 컴포넌트 재확인
+            if (meshFilter == null) meshFilter = wedgeObj.GetComponent<MeshFilter>();
+            if (meshRenderer == null) meshRenderer = wedgeObj.GetComponent<MeshRenderer>();
+            if (polyCollider == null) polyCollider = wedgeObj.GetComponent<PolygonCollider2D>();
+            if (rb2d == null) rb2d = wedgeObj.GetComponent<Rigidbody2D>();
+        }
 
         if (mesh == null)
         {
             mesh = new Mesh { name = "Flashlight2D_Mesh" };
             mesh.MarkDynamic();
         }
-        
-        if (meshFilter.sharedMesh != mesh)
+
+        // 🔧 OnValidate 오류 방지: 이미 같은 메시면 할당 생략
+        if (meshFilter != null && meshFilter.sharedMesh != mesh)
         {
             meshFilter.sharedMesh = mesh;
         }
-
-        polyCollider = wedgeRoot.GetComponent<PolygonCollider2D>();
-        if (polyCollider == null) polyCollider = wedgeRoot.gameObject.AddComponent<PolygonCollider2D>();
-        polyCollider.isTrigger = true;
-
-        rb2d = wedgeRoot.GetComponent<Rigidbody2D>();
-        if (rb2d == null) rb2d = wedgeRoot.gameObject.AddComponent<Rigidbody2D>();
-        rb2d.bodyType = RigidbodyType2D.Kinematic;
-        rb2d.simulated = true; // 중요: 시뮬레이션 활성화
-
-        // 🔧 수정: 자식 오브젝트에 트리거 핸들러 추가
-        var handler = wedgeRoot.GetComponent<FlashlightTriggerHandler>();
-        if (handler == null) handler = wedgeRoot.gameObject.AddComponent<FlashlightTriggerHandler>();
-        handler.parentFlashlight = this;
     }
 
     void RebuildGeometry()
@@ -212,58 +245,64 @@ public class Flashlight2D : MonoBehaviour
         mesh.triangles = tris;
         mesh.RecalculateBounds();
 
-        var path = new Vector2[steps + 2];
-        path[0] = Vector2.zero;
-        for (int i = 0; i <= steps; i++)
+        if (polyCollider != null)
         {
-            path[i + 1] = verts[i + 1];
+            var path = new Vector2[steps + 2];
+            path[0] = Vector2.zero;
+            for (int i = 0; i <= steps; i++)
+            {
+                path[i + 1] = verts[i + 1];
+            }
+            polyCollider.SetPath(0, path);
         }
-        polyCollider.SetPath(0, path);
     }
 
     void ApplyVisual()
     {
         _lastColor = color;
         if (meshRenderer == null) return;
-        
-        Shader unlitShader = Shader.Find("Universal Render Pipeline/Unlit");
-        if (unlitShader == null)
-        {
-            // URP가 아닌 경우 기본 셰이더 사용
-            unlitShader = Shader.Find("Unlit/Transparent");
-            if (unlitShader == null)
-            {
-                Debug.LogWarning("적절한 셰이더를 찾을 수 없습니다. Sprites/Default를 시도합니다.");
-                unlitShader = Shader.Find("Sprites/Default");
-            }
-        }
 
-        if (unlitShader == null)
+        // 🔧 셰이더 우선순위: Sprites/Default → URP/Unlit → Unlit/Transparent
+        Shader shader = Shader.Find("Sprites/Default");
+        if (shader == null) shader = Shader.Find("Universal Render Pipeline/Unlit");
+        if (shader == null) shader = Shader.Find("Unlit/Transparent");
+        if (shader == null) shader = Shader.Find("Unlit/Color");
+
+        if (shader == null)
         {
-            Debug.LogError("사용 가능한 셰이더를 찾을 수 없습니다.");
+            Debug.LogError("Flashlight2D: 사용 가능한 셰이더를 찾을 수 없습니다!");
             return;
         }
 
         Material mat = Application.isPlaying ? meshRenderer.material : meshRenderer.sharedMaterial;
 
-        if (mat == null || mat.shader != unlitShader)
+        // 머티리얼이 없거나 셰이더가 다르면 새로 생성
+        bool needsNewMaterial = mat == null || mat.shader != shader;
+        
+        if (needsNewMaterial)
         {
-            mat = new Material(unlitShader) { name = "Flashlight2D_Mat" };
+            mat = new Material(shader) { name = "Flashlight2D_Mat" };
         }
 
-        // URP 셰이더인 경우
-        if (unlitShader.name.Contains("Universal Render Pipeline"))
+        // 셰이더별 설정
+        if (shader.name.Contains("Sprites"))
         {
-            mat.SetColor("_BaseColor", color);
-            mat.SetFloat("_Surface", 1f); // Transparent
-            mat.SetFloat("_Blend", 0f);   // Alpha
-        }
-        else
-        {
-            // 기본 셰이더인 경우
             mat.color = color;
         }
+        else if (shader.name.Contains("Universal Render Pipeline"))
+        {
+            mat.SetColor("_BaseColor", color);
+            if (mat.HasProperty("_Surface")) mat.SetFloat("_Surface", 1f);
+            if (mat.HasProperty("_Blend")) mat.SetFloat("_Blend", 0f);
+            mat.renderQueue = 3000;
+        }
+        else if (shader.name.Contains("Unlit"))
+        {
+            mat.color = color;
+            mat.renderQueue = 3000;
+        }
 
+        // 머티리얼 할당
         if (Application.isPlaying)
         {
             meshRenderer.material = mat;
@@ -273,13 +312,19 @@ public class Flashlight2D : MonoBehaviour
             meshRenderer.sharedMaterial = mat;
         }
 
+        // 렌더러 설정
         meshRenderer.sortingLayerName = sortingLayerName;
         meshRenderer.sortingOrder = sortingOrder;
+
+        if (!meshRenderer.enabled && isOn)
+        {
+            meshRenderer.enabled = true;
+        }
     }
 
     void ApplyToggle()
     {
-        if (wedgeRoot == null) return;
+        if (wedgeObj == null) return;
         bool active = isOn;
         if (meshRenderer != null) meshRenderer.enabled = active;
         if (polyCollider != null) polyCollider.enabled = active;
@@ -303,26 +348,76 @@ public class Flashlight2D : MonoBehaviour
 
     public void Toggle() => SetOn(!isOn);
 
-    // 🔧 수정: 자식에서 호출되는 메서드들
-    internal void HandleTriggerEnter(Collider2D other)
+    // 🔧 자식 오브젝트의 Collider에서 호출됨
+    void OnTriggerEnter2D(Collider2D other)
     {
-        if (!isOn) return;
-        if (((1 << other.gameObject.layer) & detectionMask) == 0) return;
-        if (!string.IsNullOrEmpty(requiredTag) && !other.CompareTag(requiredTag)) return;
+        // 이 메서드는 자식의 PolygonCollider2D가 아닌
+        // 부모에 직접 Collider가 있을 때만 작동하므로
+        // 실제로는 작동하지 않습니다.
+        // 아래 수동 체크 방식을 사용해야 합니다.
+    }
 
-        if (inside.Add(other))
+    void OnTriggerExit2D(Collider2D other)
+    {
+        // 위와 동일
+    }
+
+    // 🔧 수동 감지 시스템 (FixedUpdate 사용)
+    void FixedUpdate()
+    {
+        if (!Application.isPlaying || !isOn || polyCollider == null) return;
+
+        // OverlapCollider로 현재 접촉 중인 모든 Collider2D 가져오기
+        ContactFilter2D filter = new ContactFilter2D();
+        filter.useTriggers = true;
+        filter.SetLayerMask(detectionMask);
+
+        List<Collider2D> results = new List<Collider2D>();
+        int count = Physics2D.OverlapCollider(polyCollider, filter, results);
+
+        // 새로 들어온 것 감지
+        HashSet<Collider2D> currentSet = new HashSet<Collider2D>(results);
+        
+        foreach (var col in currentSet)
         {
-            Debug.Log($"Flashlight2D 감지: {other.name}");
-            OnTargetEnter?.Invoke(other);
+            if (!inside.Contains(col))
+            {
+                // 태그 체크
+                if (!string.IsNullOrEmpty(requiredTag) && !col.CompareTag(requiredTag))
+                    continue;
+
+                inside.Add(col);
+                Debug.Log($"Flashlight2D 감지: {col.name}");
+                OnTargetEnter?.Invoke(col);
+            }
+        }
+
+        // 나간 것 감지
+        List<Collider2D> toRemove = new List<Collider2D>();
+        foreach (var col in inside)
+        {
+            if (!currentSet.Contains(col))
+            {
+                toRemove.Add(col);
+            }
+        }
+
+        foreach (var col in toRemove)
+        {
+            inside.Remove(col);
+            Debug.Log($"Flashlight2D 벗어남: {col.name}");
+            OnTargetExit?.Invoke(col);
         }
     }
 
-    internal void HandleTriggerExit(Collider2D other)
+    void OnDestroy()
     {
-        if (inside.Remove(other))
+        if (mesh != null)
         {
-            Debug.Log($"Flashlight2D 벗어남: {other.name}");
-            OnTargetExit?.Invoke(other);
+            if (Application.isPlaying)
+                Destroy(mesh);
+            else
+                DestroyImmediate(mesh);
         }
     }
 
@@ -335,7 +430,7 @@ public class Flashlight2D : MonoBehaviour
 
         Vector2 dir = GetAimDirection();
         float baseAngle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
-        
+
         Vector3 from = Quaternion.Euler(0, 0, baseAngle - half) * Vector3.right;
         UnityEditor.Handles.color = new Color(1f, 1f, 0.2f, 0.2f);
         UnityEditor.Handles.DrawSolidArc(pos, Vector3.forward, from, coneAngle, range);
@@ -343,23 +438,4 @@ public class Flashlight2D : MonoBehaviour
         UnityEditor.Handles.DrawWireArc(pos, Vector3.forward, from, coneAngle, range);
     }
 #endif
-}
-
-// 🔧 새로 추가: 트리거 이벤트를 부모로 전달하는 헬퍼 컴포넌트
-[ExecuteAlways]
-public class FlashlightTriggerHandler : MonoBehaviour
-{
-    [HideInInspector] public Flashlight2D parentFlashlight;
-
-    void OnTriggerEnter2D(Collider2D other)
-    {
-        if (parentFlashlight != null)
-            parentFlashlight.HandleTriggerEnter(other);
-    }
-
-    void OnTriggerExit2D(Collider2D other)
-    {
-        if (parentFlashlight != null)
-            parentFlashlight.HandleTriggerExit(other);
-    }
 }
