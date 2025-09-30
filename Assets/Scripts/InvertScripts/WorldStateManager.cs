@@ -6,24 +6,24 @@ using UnityEngine.Events;
 [DisallowMultipleComponent]
 public class WorldStateManager : MonoBehaviour
 {
-    // ¹è°æÀÇ »óÅÂ, ¼ÕÀüµîÀÇ »óÅÂ, ¹ÝÀüµÇ¾ú´ÂÁö »óÅÂ Ã¼Å©
-    // »ö»ó ¹ÝÀü, ¸îÃÊ ÈÄ¿¡ ¿ø»ó º¹±Í ±â´É
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½Ç¾ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Ã¼Å©
+    // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ ï¿½Ä¿ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
 
-    // ±âº» »óÅÂ
-    [SerializeField] private bool startBackgroundWhite = false; // ±âº»: °ËÁ¤ ¹è°æ
-    [SerializeField] private bool startFlashlightBlack = false; // ±âº»: ÇÏ¾ç ¼ÕÀüµî
+    // ï¿½âº» ï¿½ï¿½ï¿½ï¿½
+    [SerializeField] private bool startBackgroundWhite = false; // ï¿½âº»: ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
+    [SerializeField] private bool startFlashlightBlack = false; // ï¿½âº»: ï¿½Ï¾ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
-    // Events (Inspector ¹ÙÀÎµù¿ë)
+    // Events (Inspector ï¿½ï¿½ï¿½Îµï¿½ï¿½ï¿½)
     [Serializable] public class Bool2Event : UnityEvent<bool, bool> { } // (bgWhite, lightBlack)
     [SerializeField] private Bool2Event onPaletteFlagsChanged;
-    [SerializeField] private UnityEvent<bool> onIsInvertedChanged;
+    [SerializeField] public UnityEvent<bool> onIsInvertedChanged;
 
-    // ÀÐ±â Àü¿ë »óÅÂ
+    // ï¿½Ð±ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     public bool BackgroundIsWhite { get; private set; }
     public bool FlashlightIsBlack { get; private set; }
     public bool IsInverted => BackgroundIsWhite && FlashlightIsBlack;
 
-    Coroutine invertCo; // ¾ÆÀÌÅÛ Áö¼Ó ½Ã°£ ³¡³ª¸é ÀÚµ¿À¸·Î ¿ø·¡ »óÅÂ·Î º¹±Í
+    Coroutine invertCo; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Úµï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Â·ï¿½ ï¿½ï¿½ï¿½ï¿½
 
     void Awake()
     {
