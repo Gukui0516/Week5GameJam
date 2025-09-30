@@ -12,14 +12,6 @@ public class InvertPickup : MonoBehaviour, Item
     [Header("Refs")]
     [SerializeField] private WorldStateManager world; // 인스펙터에서 할당
 
-    void OnTriggerEnter2D(Collider2D other)
-    {
-        if (!other.CompareTag(playerTag)) return;
-        if (!world) return;
-
-        Debug.Log("아이템 먹음");
-        world.ActivateInversion(invertDuration);
-    }
     public void ActiveItem()
     {
         if (!world) 
@@ -29,5 +21,6 @@ public class InvertPickup : MonoBehaviour, Item
         }
         Debug.Log("아이템 먹음");
         world.ActivateInversion(invertDuration);
+        Destroy(gameObject);
     }
 }
