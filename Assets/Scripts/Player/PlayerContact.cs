@@ -15,7 +15,6 @@ public class PlayerContact : MonoBehaviour
         {
             if (hit.gameObject.CompareTag("Enemy"))
             {
-
                 Debug.Log("Contact Enemy");
                 gameObject.SetActive(false);
             }
