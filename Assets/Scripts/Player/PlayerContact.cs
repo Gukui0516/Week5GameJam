@@ -20,6 +20,15 @@ public class PlayerContact : MonoBehaviour
             else if(hit.gameObject.CompareTag("Item"))
             {
                 Debug.Log("아이템 "+hit.name+" 획득");
+                Item item = hit.GetComponent<Item>();
+                if (item != null) 
+                {
+                    item.ActiveItem();
+                }
+                else
+                {
+                    Debug.Log("아이템 연결 안됨");
+                }
                 //아이템 효과 발동 시키는 코드
             }
 
