@@ -8,8 +8,10 @@ public class EnemyMove : MonoBehaviour
     [SerializeField] private float stoppingDistance = 1.5f;
 
     [SerializeField] private WorldStateManager worldStateManager;
+    [SerializeField] private Flashlight2D flashlight;
 
     private Transform player;
+    private bool isInLight = false; //손전등 빛에 있을 때 정지
 
     #endregion
 
@@ -23,6 +25,26 @@ public class EnemyMove : MonoBehaviour
         {
             worldStateManager = FindFirstObjectByType<WorldStateManager>();
         }
+
+        if (flashlight == null)
+        {
+            flashlight = FindFirstObjectByType<Flashlight2D>();
+        }
+
+        if (flashlight != null)
+        {
+            flashlight.OnTargetEnter.AddListener(OnEnteredLight);
+            flashlight.OnTargetExit.AddListener(OnExitedLight);
+        }
+    }
+
+    void OnDestroy()
+    {
+        if (flashlight != null)
+        {
+            flashlight.OnTargetEnter.RemoveListener(OnEnteredLight);
+            flashlight.OnTargetExit.RemoveListener(OnExitedLight);
+        }
     }
 
     void Update()
@@ -31,6 +53,7 @@ public class EnemyMove : MonoBehaviour
         if (player == null) return;
 
         if (IsStoppedByInversion()) return;
+        if (isInLight) return;
 
         MoveTowardsPlayer();
     }
@@ -53,11 +76,27 @@ public class EnemyMove : MonoBehaviour
             transform.position += (Vector3)(direction * speed * Time.deltaTime);
         }
     }
+    #endregion
 
-    // TODO: 손전등 빛에 있을 때 정지
-    private void StopInLight()
+
+    #region Flashlight Events
+
+    private void OnEnteredLight(Collider2D col)
     {
-        // 손전등 코드 구현 후 작성
+        if (col.gameObject == gameObject)
+        {
+            isInLight = true;
+            Debug.Log($"{gameObject.name} 손전등 진입!");
+        }
+    }
+
+    private void OnExitedLight(Collider2D col)
+    {
+        if (col.gameObject == gameObject)
+        {
+            isInLight = false;
+            Debug.Log($"{gameObject.name} 손전등 벗어남!");
+        }
     }
 
     #endregion
