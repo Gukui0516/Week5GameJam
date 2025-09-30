@@ -250,14 +250,13 @@ GameObject:
   m_Component:
   - component: {fileID: 8417029550108410115}
   - component: {fileID: 7608774312115415493}
-  - component: {fileID: 910707400360178050}
   - component: {fileID: 7576284608039029540}
   - component: {fileID: 7299237921836153433}
   - component: {fileID: 4165528570595050970}
   - component: {fileID: -2403850619383150485}
   m_Layer: 0
   m_Name: Player
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -334,21 +333,6 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!114 &910707400360178050
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6083921524223410634}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e19747de3f5aca642ab2be37e372fb86, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_EffectColor: {r: 0, g: 0, b: 0, a: 0.5}
-  m_EffectDistance: {x: 1, y: -1}
-  m_UseGraphicAlpha: 1
 --- !u!58 &7576284608039029540
 CircleCollider2D:
   m_ObjectHideFlags: 0
@@ -516,3 +500,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00c756e187cad5b44ac4b3c34431646b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  collisionLayer:
+    serializedVersion: 2
+    m_Bits: 0
+  checkRadius: {fileID: 7576284608039029540}
