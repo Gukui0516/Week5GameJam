@@ -150,8 +150,8 @@ public class Flashlight2DVisual : MonoBehaviour
     public void UpdateMaterial(Color color, string sortingLayerName, int sortingOrder)
     {
         // 변경사항이 없으면 스킵
-        if (lastColor == color && 
-            lastSortingLayer == sortingLayerName && 
+        if (lastColor == color &&
+            lastSortingLayer == sortingLayerName &&
             lastSortingOrder == sortingOrder)
         {
             return;
@@ -184,7 +184,7 @@ public class Flashlight2DVisual : MonoBehaviour
 
         // 머티리얼이 없거나 쉐이더가 다르면 새로 생성
         bool needsNewMaterial = mat == null || mat.shader != shader;
-        
+
         if (needsNewMaterial)
         {
             mat = new Material(shader) { name = "Flashlight2D_Mat" };
@@ -239,7 +239,7 @@ public class Flashlight2DVisual : MonoBehaviour
         if (!Application.isPlaying || parent == null || polyCollider == null) return;
         if (!polyCollider.enabled) return;
 
-        // OverlapCollider로 현재 접촉 중인 모든 Collider2D 가져오기
+        // 1. OverlapCollider로 현재 손전등 범위(PolygonCollider2D)와 겹치는 모든 콜라이더를 가져온다.
         ContactFilter2D filter = new ContactFilter2D();
         filter.useTriggers = true;
         filter.SetLayerMask(parent.detectionMask);
@@ -249,25 +249,21 @@ public class Flashlight2DVisual : MonoBehaviour
 
         // 새로 들어온 것 감지
         HashSet<Collider2D> currentSet = new HashSet<Collider2D>(results);
-        
+
+        // 2. 새로 들어온 콜라이더(Enter) 처리
         foreach (var col in currentSet)
         {
+            // 이전 프레임에는 없었는데, 현재 프레임에 새로 감지되었다면 'Enter'로 간주
             if (!insideColliders.Contains(col))
             {
-                // 태그 체크
-                if (!string.IsNullOrEmpty(parent.requiredTag) && !col.CompareTag(parent.requiredTag))
-                    continue;
-
-                insideColliders.Add(col);
-                Debug.Log($"Flashlight2D 감지: {col.name}");
-                parent.NotifyTargetEnter(col);
+                HandleTargetEnter(col);
             }
         }
 
-        // 나간 것 감지
+        // 3. 범위를 벗어난 콜라이더(Exit) 처리
         List<Collider2D> toRemove = new List<Collider2D>();
-        foreach (var col in insideColliders)
-        {
+        foreach (var col in insideColliders) // 이전 프레임까지 감지되었던 목록을 순회
+        {// 이전 프레임에는 있었는데, 현재 프레임의 감지 목록에 없다면 'Exit'로 간주
             if (col == null || !currentSet.Contains(col))
             {
                 toRemove.Add(col);
@@ -276,11 +272,10 @@ public class Flashlight2DVisual : MonoBehaviour
 
         foreach (var col in toRemove)
         {
-            insideColliders.Remove(col);
+            insideColliders.Remove(col); // 감지된 목록에서 제거
             if (col != null)
             {
-                Debug.Log($"Flashlight2D 벗어남: {col.name}");
-                parent.NotifyTargetExit(col);
+                HandleTargetExit(col);
             }
         }
     }
@@ -311,4 +306,33 @@ public class Flashlight2DVisual : MonoBehaviour
                 DestroyImmediate(mesh);
         }
     }
+
+#region OnTriggerEnter/Exit Handlers
+    /// <summary>
+    /// 새로운 대상을 감지했을 때 호출되는 메서드. (OnTriggerEnter2D 역할)
+    /// </summary>
+    private void HandleTargetEnter(Collider2D target)
+    {
+        // 태그 체크
+        if (!string.IsNullOrEmpty(parent.requiredTag) && !target.CompareTag(parent.requiredTag))
+            return;
+
+        insideColliders.Add(target);
+        Debug.Log($"Flashlight2D 감지: {target.name}");
+        parent.NotifyTargetEnter(target);
+    }
+
+    /// <summary>
+    /// 대상이 범위를 벗어났을 때 호출되는 메서드. (OnTriggerExit2D 역할)
+    /// </summary>
+    private void HandleTargetExit(Collider2D target)
+    {
+        if (target == null) return; // 이미 파괴된 오브젝트일 수 있음
+
+        insideColliders.Remove(target);
+        Debug.Log($"Flashlight2D 벗어남: {target.name}");
+        parent.NotifyTargetExit(target);
+    }
+
+#endregion
 }
