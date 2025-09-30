@@ -7,6 +7,8 @@ public class EnemyMove : MonoBehaviour
     [SerializeField] private float speed = 3f;
     [SerializeField] private float stoppingDistance = 1.5f;
 
+    [SerializeField] private WorldStateManager worldStateManager;
+
     private Transform player;
 
     #endregion
@@ -16,6 +18,11 @@ public class EnemyMove : MonoBehaviour
     void Start()
     {
         player = GameObject.FindGameObjectWithTag("Player")?.transform;
+
+        if (worldStateManager == null)
+        {
+            worldStateManager = FindFirstObjectByType<WorldStateManager>();
+        }
     }
 
     void Update()
@@ -23,6 +30,21 @@ public class EnemyMove : MonoBehaviour
         // TODO: 플레이어 구현 후 null 체크 제거
         if (player == null) return;
 
+        if (IsStoppedByInversion()) return;
+
+        MoveTowardsPlayer();
+    }
+
+    #endregion
+
+    #region Movement
+    private bool IsStoppedByInversion()
+    {
+        return worldStateManager != null && worldStateManager.IsInverted;
+    }
+
+    private void MoveTowardsPlayer()
+    {
         float distance = Vector2.Distance(transform.position, player.position);
 
         if (distance > stoppingDistance)
@@ -31,10 +53,6 @@ public class EnemyMove : MonoBehaviour
             transform.position += (Vector3)(direction * speed * Time.deltaTime);
         }
     }
-
-    #endregion
-
-    #region Movement
 
     // TODO: 손전등 빛에 있을 때 정지
     private void StopInLight()
