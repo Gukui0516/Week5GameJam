@@ -134,7 +134,7 @@ GameObject:
   - component: {fileID: 1374186192906355288}
   - component: {fileID: 824073078448642078}
   - component: {fileID: 5101757877946332033}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: LightSeekerEnemy
   m_TagString: Enemy
   m_Icon: {fileID: 0}
@@ -150,7 +150,7 @@ Transform:
   m_GameObject: {fileID: 3217619446867333131}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.5913979, y: -0.6236559, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -298,8 +298,8 @@ MonoBehaviour:
   despawnDistance: 25
   despawnCheckInterval: 1
   useOutline: 1
-  eyesVisibleDistance: 2
-  lightSeekerVisibilityDistance: 5
+  eyesVisibleDistance: 3
+  lightSeekerVisibilityDistance: 3
   worldStateManager: {fileID: 0}
   enemyOutline: {fileID: 5101757877946332033}
   eyesObject: {fileID: 793540923169711125}

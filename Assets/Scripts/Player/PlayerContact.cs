@@ -18,12 +18,15 @@ public class PlayerContact : MonoBehaviour
         Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, checkRadius.radius);
         foreach (Collider2D hit in hits)
         {
+            
             if (hit.gameObject.CompareTag("Enemy"))
             {
+                Debug.Log(hit.gameObject.name);
                 if (isContact == false)
                 {
-                    //GameManager.Instance.GameOver();
-                    //isContact = true;
+                    GetComponentInChildren<Flashlight2D>().isOn = false ;
+                    GameManager.Instance.GameOver();
+                    isContact = true;
                 }
 
             }

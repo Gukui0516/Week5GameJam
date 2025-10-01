@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 using System;
@@ -87,6 +87,7 @@ public class Flashlight2D : MonoBehaviour
     // 활성화 시 구독, 비활성화 시 해제
     void OnEnable()
     {
+        isOn = true;
         SubscribeWorldEvents();
         SyncInvertedImmediate();
     }
@@ -316,10 +317,10 @@ public class Flashlight2D : MonoBehaviour
 
 
 
-#endregion
+    #endregion
 
 
-#region WorldStateManager Event Handling
+    #region WorldStateManager Event Handling
     private void SubscribeWorldEvents()
     {
         if (worldStateManager == null)
@@ -344,11 +345,23 @@ public class Flashlight2D : MonoBehaviour
     // [추가] 콜백: 내부 bool 갱신 + 팔레트 색 즉시 반영
     private void HandleInvertedChanged(bool inverted)
     {
+        bool changed = isInverted != inverted;   // 실제 변경 여부 체크
         isInverted = inverted;
+
         if (inverted) ChangeFlashlightInverted();
-        else          ChangeFlashlightNormal();
+        else ChangeFlashlightNormal();
+        
+        // 반전 '이벤트'가 발생한 그 프레임에만 한 번 처리
+        if (changed && visualComponent != null && isInverted)
+        {
+            int killed = visualComponent.ExecuteEnemyCullBurst(detectionMask);
+            // 필요하면 로그 풀어써라
+            Debug.Log($"Inversion burst: {killed} enemies removed.");
+        }
     }
 
-#endregion
+    #endregion
+
+
 
 }
