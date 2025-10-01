@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
 public class EnemyController : MonoBehaviour
@@ -320,26 +320,26 @@ public class EnemyController : MonoBehaviour
     }
 
     // LightSeeker의 속도를 손전등에 있는 시간에 따라 증가
-    private void UpdateLightSeekerSpeed()
+    //private void UpdateLightSeekerSpeed()
+    //{
+    //    timeInLight += Time.deltaTime;
+
+    //    // speedIncreaseInterval마다 속도 2씩 증가 (2, 4, 6, 8)
+    //    float speedBonus = Mathf.Floor(timeInLight / speedIncreaseInterval) * speedIncreaseRate;
+    //    currentSpeed = Mathf.Min(lightSeekerBaseSpeed + speedBonus, maxSpeed);
+    //}
+
+    //지수적 증가 버전
+         private void UpdateLightSeekerSpeed()
     {
         timeInLight += Time.deltaTime;
 
-        // speedIncreaseInterval마다 속도 2씩 증가 (2, 4, 6, 8)
-        float speedBonus = Mathf.Floor(timeInLight / speedIncreaseInterval) * speedIncreaseRate;
-        currentSpeed = Mathf.Min(lightSeekerBaseSpeed + speedBonus, maxSpeed);
+        //지수적 증가: baseSpeed * (multiplier ^ 경과 인터벌 수)
+             int intervals = Mathf.FloorToInt(timeInLight / speedIncreaseInterval);
+        float speedMultiplier = Mathf.Pow(speedIncreaseRate, intervals);
+
+        currentSpeed = Mathf.Min(lightSeekerBaseSpeed * speedMultiplier, maxSpeed);
     }
-
-    // 지수적 증가 버전
-    //     private void UpdateLightSeekerSpeed()
-    //     {
-    //         timeInLight += Time.deltaTime;
-
-    // 지수적 증가: baseSpeed * (multiplier ^ 경과 인터벌 수)
-    //         int intervals = Mathf.FloorToInt(timeInLight / speedIncreaseInterval);
-    //         float speedMultiplier = Mathf.Pow(speedIncreaseRate, intervals);
-
-    //         currentSpeed = Mathf.Min(lightSeekerBaseSpeed * speedMultiplier, maxSpeed);
-    //     }
 
     #endregion
 

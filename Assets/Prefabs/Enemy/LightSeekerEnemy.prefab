@@ -291,9 +291,9 @@ MonoBehaviour:
   enemyType: 1
   speed: 2
   stoppingDistance: 0.5
-  lightSeekerBaseSpeed: 2
-  speedIncreaseRate: 0.2
-  speedIncreaseInterval: 2
+  lightSeekerBaseSpeed: 1
+  speedIncreaseRate: 1.2
+  speedIncreaseInterval: 0.1
   maxSpeed: 16
   despawnDistance: 25
   despawnCheckInterval: 1
