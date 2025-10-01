@@ -17,6 +17,12 @@ public class EnemyController : MonoBehaviour
     [SerializeField] private float speed = 3f;
     [SerializeField] private float stoppingDistance = 1.5f;
 
+    [Header("LightSeeker Speed Settings")]
+    [SerializeField] private float lightSeekerBaseSpeed = 2f;
+    [SerializeField] private float speedIncreaseRate = 2f; // speedIncreaseInterval마다 2씩 증가
+    [SerializeField] private float speedIncreaseInterval = 2f;
+    [SerializeField] private float maxSpeed = 8f;
+
     [Header("Visibility Settings")]
     [SerializeField] private bool useOutline = false; // 아웃라인 사용 여부
     [SerializeField] private float eyesVisibleDistance = 10f; // Eyes가 보이는 거리
@@ -32,6 +38,10 @@ public class EnemyController : MonoBehaviour
     private Transform player;
     private bool isInLight = false; //손전등 빛에 있을 때 정지
     private bool isInverted = false; //반전 상태 추적
+
+    // LightSeeker 속도 관련 변수
+    private float currentSpeed;
+    private float timeInLight = 0f;
 
     #endregion
 
@@ -85,6 +95,16 @@ public class EnemyController : MonoBehaviour
             // 초기 상태 동기화
             isInverted = worldStateManager.IsInverted;
         }
+
+        // LightSeeker의 경우 초기 속도 설정
+        if (enemyType == EnemyType.LightSeeker)
+        {
+            currentSpeed = lightSeekerBaseSpeed;
+        }
+        else
+        {
+            currentSpeed = speed;
+        }
     }
 
     void OnDestroy()
@@ -102,6 +122,12 @@ public class EnemyController : MonoBehaviour
         UpdateVisibility();
 
         if (IsStoppedByInversion()) return;
+
+        // LightSeeker 타입이고 손전등 안에 있을 때 속도 증가
+        if (enemyType == EnemyType.LightSeeker && isInLight)
+        {
+            UpdateLightSeekerSpeed();
+        }
 
         // Enum 타입에 따라 움직임 결정
         if (ShouldMove())
@@ -142,14 +168,25 @@ public class EnemyController : MonoBehaviour
         if (distance > stoppingDistance)
         {
             Vector2 direction = (player.position - transform.position).normalized;
-            transform.position += (Vector3)(direction * speed * Time.deltaTime);
+            transform.position += (Vector3)(direction * currentSpeed * Time.deltaTime);
         }
     }
+
+    // LightSeeker의 속도를 손전등에 있는 시간에 따라 증가
+    private void UpdateLightSeekerSpeed()
+    {
+        timeInLight += Time.deltaTime;
+
+        // speedIncreaseInterval마다 속도 2씩 증가 (2, 4, 6, 8)
+        float speedBonus = Mathf.Floor(timeInLight / speedIncreaseInterval) * speedIncreaseRate;
+        currentSpeed = Mathf.Min(lightSeekerBaseSpeed + speedBonus, maxSpeed);
+    }
+
     #endregion
 
     #region Visibility Management
 
-    // 거리와 손전등 상태에 따라 Eyes 표시
+    // 거리에 따라 Eyes 표시
     private void UpdateVisibility()
     {
         if (player == null) return;
@@ -160,12 +197,23 @@ public class EnemyController : MonoBehaviour
         UpdateEyesVisibility(distance);
     }
 
-    // Eyes 업데이트 - 거리 안에 있거나 OR 손전등에 비춰질 때 켜짐
+    // Eyes 업데이트 - Normal은 거리만, LightSeeker는 거리 또는 손전등
     private void UpdateEyesVisibility(float distance)
     {
         if (eyesObject == null) return;
 
-        bool shouldBeActive = distance <= eyesVisibleDistance || isInLight;
+        bool shouldBeActive;
+
+        if (enemyType == EnemyType.LightSeeker)
+        {
+            // LightSeeker: 거리 안에 있거나 OR 손전등에 비춰질 때 켜짐
+            shouldBeActive = distance <= eyesVisibleDistance || isInLight;
+        }
+        else
+        {
+            // Normal: 거리 안에 있을 때만 켜짐
+            shouldBeActive = distance <= eyesVisibleDistance;
+        }
 
         if (shouldBeActive != eyesObject.activeSelf)
         {
@@ -234,6 +282,13 @@ public class EnemyController : MonoBehaviour
             isInLight = false;
             Debug.Log($"{gameObject.name} 손전등 벗어남!");
 
+            // LightSeeker의 경우 속도와 시간 초기화
+            if (enemyType == EnemyType.LightSeeker)
+            {
+                currentSpeed = lightSeekerBaseSpeed;
+                timeInLight = 0f;
+            }
+
             // 손전등에서 벗어나면 원래 색상으로 복구 (useOutline이 true일 때만)
             if (useOutline && enemyOutline != null)
             {
@@ -257,6 +312,13 @@ public class EnemyController : MonoBehaviour
         if (eyesObject != null)
         {
             eyesObject.SetActive(false);
+        }
+
+        // LightSeeker의 경우 속도 초기화
+        if (enemyType == EnemyType.LightSeeker)
+        {
+            currentSpeed = lightSeekerBaseSpeed;
+            timeInLight = 0f;
         }
 
         EnemySpawner.Instance.ReturnEnemy(gameObject);

@@ -291,6 +291,10 @@ MonoBehaviour:
   enemyType: 1
   speed: 6
   stoppingDistance: 0.5
+  lightSeekerBaseSpeed: 2
+  speedIncreaseRate: 2
+  speedIncreaseInterval: 0.2
+  maxSpeed: 16
   useOutline: 1
   eyesVisibleDistance: 2
   worldStateManager: {fileID: 0}
