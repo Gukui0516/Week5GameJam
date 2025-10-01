@@ -8,14 +8,15 @@ using TMPro;
 public class KeyUI : MonoBehaviour
 {
     [Header("Binding")]
-    [SerializeField] private KeyKind keyKind = KeyKind.Red;
-    [SerializeField] private Image icon;                 // 이 오브젝트의 Image
-    [SerializeField] private TMP_Text countText;         // 자식 TMP_Text
+    [SerializeField] private KeyKind keyKind = KeyKind.Clover;
+    [SerializeField] private Image icon;                  // 아이콘 이미지
+    [SerializeField] private TMP_Text countText;          // 수량 텍스트 (예: x0)
+    [SerializeField] private TMP_Text titleText;          // 타이틀 텍스트 (예: CLOVER)
 
     [Header("Visual")]
-    [Range(0,1)] [SerializeField] private float inactiveAlpha = 50f/255f;
-    [Range(0,1)] [SerializeField] private float activeAlpha   = 1f;
-    [SerializeField] private float fadeDuration = 0.12f; // 짧게 페이드
+    [Range(0,1)] [SerializeField] private float inactiveAlpha = 0f;     // 미보유 시 투명도
+    [Range(0,1)] [SerializeField] private float activeAlpha   = 1f;     // 보유 시 투명도
+    [SerializeField] private float fadeDuration = 0.12f;                 // 페이드 시간
 
     [Header("Behavior")]
     [Tooltip("씬 전환 시 UI 표시를 0개 상태로 초기화")]
@@ -27,7 +28,7 @@ public class KeyUI : MonoBehaviour
     private void Awake()
     {
         if (icon == null) icon = GetComponent<Image>();
-        if (countText == null) countText = GetComponentInChildren<TMP_Text>(true);
+        TryAutoBindTexts(); // count/title 자동 매핑 시도
     }
 
     private void OnEnable()
@@ -35,7 +36,8 @@ public class KeyUI : MonoBehaviour
         TryHookCollector();
         if (resetVisualOnSceneLoad)
             SceneManager.sceneLoaded += OnSceneLoaded;
-        // 첫 프레임에 동기화
+
+        // 첫 프레임 동기화
         RefreshFromCollector();
     }
 
@@ -105,43 +107,99 @@ public class KeyUI : MonoBehaviour
     private void SetCountInstant(int value)
     {
         if (countText != null) countText.text = $"x{Mathf.Max(0, value)}";
-        SetIconAlpha(value > 0 ? activeAlpha : inactiveAlpha);
+        SetAlphaAll(value > 0 ? activeAlpha : inactiveAlpha);
     }
 
     private void FadeTo(float targetA)
     {
         if (fadeCo != null) StopCoroutine(fadeCo);
-        fadeCo = StartCoroutine(FadeIconAlpha(targetA, fadeDuration));
+        fadeCo = StartCoroutine(FadeVisualAlpha(targetA, fadeDuration));
     }
 
-    private IEnumerator FadeIconAlpha(float targetA, float dur)
+    private IEnumerator FadeVisualAlpha(float targetA, float dur)
     {
-        if (icon == null) yield break;
-        Color c = icon.color;
-        float startA = c.a;
         float t = 0f;
+
+        float startIconA = icon ? icon.color.a : 0f;
+        float startCountA = countText ? countText.color.a : 0f;
+        float startTitleA = titleText ? titleText.color.a : 0f;
+
+        Color ic = icon ? icon.color : default;
+        Color cc = countText ? countText.color : default;
+        Color tc = titleText ? titleText.color : default;
+
         while (t < dur)
         {
             t += Time.deltaTime;
-            float a = Mathf.Lerp(startA, targetA, t / dur);
-            icon.color = new Color(c.r, c.g, c.b, a);
+            float k = dur <= 0f ? 1f : Mathf.Clamp01(t / dur);
+
+            if (icon)
+                icon.color = new Color(ic.r, ic.g, ic.b, Mathf.Lerp(startIconA, targetA, k));
+            if (countText)
+                countText.color = new Color(cc.r, cc.g, cc.b, Mathf.Lerp(startCountA, targetA, k));
+            if (titleText)
+                titleText.color = new Color(tc.r, tc.g, tc.b, Mathf.Lerp(startTitleA, targetA, k));
+
             yield return null;
         }
-        icon.color = new Color(c.r, c.g, c.b, targetA);
+
+        SetAlphaAll(targetA);
+    }
+
+    private void SetAlphaAll(float a)
+    {
+        SetIconAlpha(a);
+        SetTextAlpha(countText, a);
+        SetTextAlpha(titleText, a);
     }
 
     private void SetIconAlpha(float a)
     {
-        if (icon == null) return;
+        if (!icon) return;
         Color c = icon.color;
         icon.color = new Color(c.r, c.g, c.b, a);
+    }
+
+    private void SetTextAlpha(TMP_Text t, float a)
+    {
+        if (!t) return;
+        Color c = t.color;
+        t.color = new Color(c.r, c.g, c.b, a);
+    }
+
+    private void TryAutoBindTexts()
+    {
+        // 인스펙터로 이미 꽂혀 있으면 존중
+        if (countText != null && titleText != null) return;
+
+        var tmps = GetComponentsInChildren<TMP_Text>(true);
+        if (tmps == null || tmps.Length == 0) return;
+
+        // 이름 힌트 기반 매핑
+        foreach (var t in tmps)
+        {
+            string n = t.name.ToLowerInvariant();
+            if (countText == null && n.Contains("count")) { countText = t; continue; }
+            if (titleText == null && n.Contains("title")) { titleText = t; continue; }
+        }
+
+        // 여전히 비어 있으면 순서로 보정
+        if (countText == null) countText = tmps[0];
+        if (titleText == null && tmps.Length > 1)
+        {
+            // 다른 것 하나를 타이틀로
+            for (int i = 0; i < tmps.Length; i++)
+            {
+                if (tmps[i] != countText) { titleText = tmps[i]; break; }
+            }
+        }
     }
 
 #if UNITY_EDITOR
     private void OnValidate()
     {
         if (icon == null) icon = GetComponent<Image>();
-        if (countText == null) countText = GetComponentInChildren<TMP_Text>(true);
+        TryAutoBindTexts();
     }
 #endif
 }

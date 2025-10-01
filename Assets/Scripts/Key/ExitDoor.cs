@@ -12,10 +12,10 @@ public class ExitDoor : MonoBehaviour
     [Header("Requirements (기본: 4종 1개씩)")]
     public KeyRequirement[] requirements = new KeyRequirement[]
     {
-        new KeyRequirement{kind=KeyKind.Red,   amount=1},
-        new KeyRequirement{kind=KeyKind.Blue,  amount=1},
-        new KeyRequirement{kind=KeyKind.Green, amount=1},
-        new KeyRequirement{kind=KeyKind.Yellow,amount=1},
+        new KeyRequirement{kind=KeyKind.Circle,   amount=1},
+        new KeyRequirement{kind=KeyKind.Clover,  amount=1},
+        new KeyRequirement{kind=KeyKind.Heart, amount=1},
+        new KeyRequirement{kind=KeyKind.Square,amount=1},
     };
     [Header("Stage-based Requirements")]
     public bool useStageTable = true;
