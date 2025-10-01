@@ -168,7 +168,17 @@ public class Flashlight2DVisual : MonoBehaviour
     {
         if (meshRenderer == null) return;
 
-        // 쉐이더 찾기
+        // 프리팹 모드 체크 추가
+        #if UNITY_EDITOR
+        if (UnityEditor.PrefabUtility.IsPartOfPrefabAsset(gameObject))
+        {
+            // 프리팹 에셋인 경우 sharedMaterial만 사용
+            UpdateSharedMaterial(color, sortingLayerName, sortingOrder);
+            return;
+        }
+        #endif
+
+        // 셰이더 찾기
         Shader shader = Shader.Find("Sprites/Default");
         if (shader == null) shader = Shader.Find("Universal Render Pipeline/Unlit");
         if (shader == null) shader = Shader.Find("Unlit/Transparent");
@@ -176,13 +186,14 @@ public class Flashlight2DVisual : MonoBehaviour
 
         if (shader == null)
         {
-            Debug.LogError("Flashlight2D: 사용 가능한 쉐이더를 찾을 수 없습니다!");
+            Debug.LogError("Flashlight2D: 사용 가능한 셰이더를 찾을 수 없습니다!");
             return;
         }
 
+        // 플레이 모드에 따라 material/sharedMaterial 선택
         Material mat = Application.isPlaying ? meshRenderer.material : meshRenderer.sharedMaterial;
 
-        // 머티리얼이 없거나 쉐이더가 다르면 새로 생성
+        // 머티리얼이 없거나 셰이더가 다르면 새로 생성
         bool needsNewMaterial = mat == null || mat.shader != shader;
 
         if (needsNewMaterial)
@@ -190,7 +201,7 @@ public class Flashlight2DVisual : MonoBehaviour
             mat = new Material(shader) { name = "Flashlight2D_Mat" };
         }
 
-        // 쉐이더별 설정
+        // 셰이더별 설정
         if (shader.name.Contains("Sprites"))
         {
             mat.color = color;
@@ -222,6 +233,26 @@ public class Flashlight2DVisual : MonoBehaviour
         meshRenderer.sortingLayerName = sortingLayerName;
         meshRenderer.sortingOrder = sortingOrder;
     }
+
+    #if UNITY_EDITOR
+    // 프리팹용 별도 처리
+    private void UpdateSharedMaterial(Color color, string sortingLayerName, int sortingOrder)
+    {
+        if (meshRenderer == null || meshRenderer.sharedMaterial == null) return;
+        
+        Material mat = meshRenderer.sharedMaterial;
+        
+        // 색상만 업데이트 (셰이더에 따라)
+        if (mat.HasProperty("_Color"))
+            mat.color = color;
+        else if (mat.HasProperty("_BaseColor"))
+            mat.SetColor("_BaseColor", color);
+        
+        // 렌더러 설정
+        meshRenderer.sortingLayerName = sortingLayerName;
+        meshRenderer.sortingOrder = sortingOrder;
+    }
+    #endif
 
     public void UpdateToggle(bool isOn)
     {
