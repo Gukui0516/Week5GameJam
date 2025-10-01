@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 using System;
@@ -87,6 +87,7 @@ public class Flashlight2D : MonoBehaviour
     // 활성화 시 구독, 비활성화 시 해제
     void OnEnable()
     {
+        isOn = true;
         SubscribeWorldEvents();
         SyncInvertedImmediate();
     }
