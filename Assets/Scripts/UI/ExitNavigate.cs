@@ -44,7 +44,6 @@ public class ExitNavigate : MonoBehaviour
         {
             uiImage.enabled = false;
         }
-        Debug.Log("화면 안에 있나?"+isOnScreen);
         if (isOnScreen) uiImage.enabled = false;
     }
     public void ExitScreenIn()
@@ -56,11 +55,6 @@ public class ExitNavigate : MonoBehaviour
         // 화면 앞에 있는지, 스크린 범위 안에 있는지 체크
         isOnScreen = screenPos.x >= 0 && screenPos.x <= Screen.width &&
                           screenPos.y >= 0 && screenPos.y <= Screen.height;
-        if (isOnScreen)
-        {
-            Debug.Log("exit가 화면 안에 들어왔습니다!");
-            // 원하는 동작 실행
-        }
     }
 
 }
