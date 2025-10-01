@@ -11,7 +11,7 @@ public class PlayerContact : MonoBehaviour
     private void Start()
     {
         isContact = false;
-    }   
+    }
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     public void CheckContact()//체크할 태그 이름
     {
@@ -22,8 +22,8 @@ public class PlayerContact : MonoBehaviour
             {
                 if (isContact == false)
                 {
-                    GameManager.Instance.GameOver();
-                    isContact = true;
+                    //GameManager.Instance.GameOver();
+                    //isContact = true;
                 }
 
             }
