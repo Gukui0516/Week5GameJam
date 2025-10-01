@@ -782,7 +782,7 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 305205253}
   m_CullTransparentMesh: 1
---- !u!43 &345238252
+--- !u!43 &327004239
 Mesh:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1508,7 +1508,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 63}
+  m_AnchoredPosition: {x: 0, y: 44}
   m_SizeDelta: {x: 350, y: 200}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1085969693
@@ -3082,11 +3082,11 @@ PrefabInstance:
       objectReference: {fileID: 1369986148}
     - target: {fileID: 5731892974804078124, guid: f4b528dec6ec3f04299e64a938559cde, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.529522
+      value: 0.5428191
       objectReference: {fileID: 0}
     - target: {fileID: 5731892974804078124, guid: f4b528dec6ec3f04299e64a938559cde, type: 3}
       propertyPath: m_LocalRotation.z
-      value: 0.8482962
+      value: 0.8398497
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -3110,7 +3110,7 @@ GameObject:
   - component: {fileID: 1681302735}
   - component: {fileID: 1681302734}
   m_Layer: 5
-  m_Name: Text (TMP)
+  m_Name: Title
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3132,7 +3132,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 289}
+  m_AnchoredPosition: {x: 0, y: 250}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1681302734
@@ -3155,7 +3155,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\uC815\uC804 \uB300\uC18C\uB3D9"
+  m_text: Flip Light
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 48c887f8d4420de4d835acb74e3245f1, type: 2}
   m_sharedMaterial: {fileID: 4906737786915171878, guid: 48c887f8d4420de4d835acb74e3245f1, type: 2}
