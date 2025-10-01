@@ -15,7 +15,7 @@ public class PlayerContact : MonoBehaviour
         {
             if (hit.gameObject.CompareTag("Enemy"))
             {
-                Debug.Log("적 접촉");
+                GameManager.Instance.GameOver();
             }
             else if(hit.gameObject.CompareTag("Item"))
             {

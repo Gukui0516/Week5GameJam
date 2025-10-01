@@ -289,17 +289,22 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   enemyType: 1
-  speed: 6
+  speed: 2
   stoppingDistance: 0.5
-  lightSeekerBaseSpeed: 2
-  speedIncreaseRate: 2
-  speedIncreaseInterval: 0.2
+  lightSeekerBaseSpeed: 1
+  speedIncreaseRate: 1.2
+  speedIncreaseInterval: 0.1
   maxSpeed: 16
+  despawnDistance: 25
+  despawnCheckInterval: 1
   useOutline: 1
   eyesVisibleDistance: 2
   worldStateManager: {fileID: 0}
   enemyOutline: {fileID: 0}
   eyesObject: {fileID: 0}
+  enableRotation: 1
+  rotationSpeed: 10
+  rotationOffset: 270
 --- !u!114 &5101757877946332033
 MonoBehaviour:
   m_ObjectHideFlags: 0
