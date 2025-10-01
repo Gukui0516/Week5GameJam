@@ -352,7 +352,7 @@ public class Flashlight2D : MonoBehaviour
         else ChangeFlashlightNormal();
         
         // 반전 '이벤트'가 발생한 그 프레임에만 한 번 처리
-        if (changed && visualComponent != null)
+        if (changed && visualComponent != null && isInverted)
         {
             int killed = visualComponent.ExecuteEnemyCullBurst(detectionMask);
             // 필요하면 로그 풀어써라
