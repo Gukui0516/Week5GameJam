@@ -73,7 +73,7 @@ public class GameManager : MonoBehaviour
         }
 
         // 씬 진입 시엔 엔딩 UI는 숨김 상태가 자연스럽다.
-        if (endingUI) endingUI.Hide();
+        if (endingUI) endingUI.HideImmediate();  // ← Hide() 대신 HideImmediate() 권장
     }
 
     // ======= 공개 API =======
