@@ -146,12 +146,8 @@ public class EnemyOutlineVisual : MonoBehaviour
             return;
         }
 
-        // Prefab ëª¨ë"œì—ì„œëŠ" sharedMaterialë§Œ ì‚¬ìš©
-#if UNITY_EDITOR
-        bool useSharedMaterial = !Application.isPlaying || UnityEditor.PrefabUtility.IsPartOfPrefabAsset(gameObject);
-#else
+        // 런타임에서는 material, 그 외에는 sharedMaterial 사용
         bool useSharedMaterial = !Application.isPlaying;
-#endif
         Material mat = useSharedMaterial ? meshRenderer.sharedMaterial : meshRenderer.material;
 
         bool needsNewMaterial = mat == null || mat.shader != shader;
