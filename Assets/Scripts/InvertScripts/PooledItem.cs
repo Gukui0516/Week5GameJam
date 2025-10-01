@@ -4,9 +4,10 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public class PooledItem : MonoBehaviour
 {
+    // 아이템이 플레이어랑 일정 거리 이상 멀어지면 제거됨. 
+
     private Transform player;
     private float maxDistance = Mathf.Infinity;
-    private float maxLifetime = -1f; // 음수면 비활성
     private float life;
 
     private Action<GameObject> releaseToPool; // 스폰너가 넘겨주는 반환 콜백
@@ -16,7 +17,6 @@ public class PooledItem : MonoBehaviour
         this.player = player;
         this.maxDistance = maxDistance;
         this.releaseToPool = releaseToPool;
-        this.maxLifetime = maxLifetime;
         life = 0f;
     }
 
@@ -35,16 +35,6 @@ public class PooledItem : MonoBehaviour
             {
                 releaseToPool?.Invoke(gameObject);
                 return;
-            }
-        }
-
-        // 선택: 수명 초과 시 반환
-        if (maxLifetime >= 0f)
-        {
-            life += Time.deltaTime;
-            if (life >= maxLifetime)
-            {
-                releaseToPool?.Invoke(gameObject);
             }
         }
     }
