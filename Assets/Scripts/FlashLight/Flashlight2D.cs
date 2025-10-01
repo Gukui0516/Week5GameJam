@@ -1,12 +1,23 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
+using System;
+
+// 색 팔레트용 엔트리
+[System.Serializable]
+public struct NamedColor
+{
+    public string key;
+    public Color color;
+}
+
+
 
 [ExecuteAlways]
 public class Flashlight2D : MonoBehaviour
 {
     public enum AimMode { TransformRight, MouseToWorld, CustomVector }
-    
+
     [Header("Aim")]
     public AimMode aimMode = AimMode.TransformRight;
     [Tooltip("aimMode가 CustomVector일 때 사용")]
@@ -41,17 +52,48 @@ public class Flashlight2D : MonoBehaviour
 
     // 자식 오브젝트 참조
     private Flashlight2DVisual visualComponent;
-    
+    [Header("Palette")]
+    [SerializeField] private List<NamedColor> colorPalette = new List<NamedColor>();
+    // 런타임 조회용
+    private Dictionary<string, Color> colorMap = new Dictionary<string, Color>();
+    private WorldStateManager worldStateManager;
+
+    // 내부 반전 상태 캐시
+    [SerializeField] private bool isInverted;
+    public bool IsInverted => isInverted;
+
     void Reset()
     {
         worldCamera = Camera.main;
         SetupChildObject();
+        RebuildColorMap();
+        if (worldStateManager == null)
+        {
+            worldStateManager = FindFirstObjectByType<WorldStateManager>();
+        }
     }
 
     void Awake()
     {
         if (!Application.isPlaying && !Application.isEditor) return;
         SetupChildObject();
+        RebuildColorMap();
+        worldStateManager = FindFirstObjectByType<WorldStateManager>();
+        if (worldStateManager == null)
+        {
+            Debug.LogWarning("Flashlight2D: WorldStateManager not found in scene.");
+        }
+    }
+    // 활성화 시 구독, 비활성화 시 해제
+    void OnEnable()
+    {
+        SubscribeWorldEvents();
+        SyncInvertedImmediate();
+    }
+
+    void OnDisable()
+    {
+        UnsubscribeWorldEvents();
     }
 
     void OnValidate()
@@ -59,6 +101,7 @@ public class Flashlight2D : MonoBehaviour
         if (Application.isPlaying)
         {
             SetupChildObject();
+            RebuildColorMap();
             UpdateVisual();
         }
         else
@@ -68,11 +111,13 @@ public class Flashlight2D : MonoBehaviour
                 if (this != null)
                 {
                     SetupChildObject();
+                    RebuildColorMap();
                     UpdateVisual();
                 }
             };
         }
     }
+
 
     void Update()
     {
@@ -170,6 +215,7 @@ public class Flashlight2D : MonoBehaviour
     }
 
 #if UNITY_EDITOR
+    /*
     void OnDrawGizmosSelected()
     {
         Gizmos.color = new Color(1f, 1f, 0.2f, 0.4f);
@@ -185,5 +231,124 @@ public class Flashlight2D : MonoBehaviour
         UnityEditor.Handles.color = new Color(1f, 1f, 0.2f, 0.8f);
         UnityEditor.Handles.DrawWireArc(pos, Vector3.forward, from, coneAngle, range);
     }
+    */
 #endif
+    // (변경) 팔레트 딕셔너리 재빌드 - 키 대소문자 무시
+    private void RebuildColorMap()
+    {
+        if (colorMap == null) colorMap = new Dictionary<string, Color>(StringComparer.OrdinalIgnoreCase);
+        else if (!(colorMap.Comparer is StringComparer)) colorMap = new Dictionary<string, Color>(colorMap, StringComparer.OrdinalIgnoreCase);
+        colorMap.Clear();
+        if (colorPalette == null) return;
+
+        for (int i = 0; i < colorPalette.Count; i++)
+        {
+            var e = colorPalette[i];
+            if (string.IsNullOrWhiteSpace(e.key)) continue;
+            colorMap[e.key] = e.color;
+        }
+    }
+
+
+
+
+    #region Public Methods (updated)
+
+    // Range 세터
+    public void SetRange(float newRange)
+    {
+        range = Mathf.Max(0.1f, newRange);
+        if (visualComponent != null)
+            visualComponent.UpdateGeometry(range, coneAngle, arcSegments);
+    }
+
+    // 부채꼴 각도 세터
+    public void SetConeAngle(float newAngle)
+    {
+        coneAngle = Mathf.Clamp(newAngle, 1f, 180f);
+        if (visualComponent != null)
+            visualComponent.UpdateGeometry(range, coneAngle, arcSegments);
+    }
+
+    // 색 직접 세터
+    public void SetLightColor(Color newColor)
+    {
+        color = newColor;
+        if (visualComponent != null)
+            visualComponent.UpdateMaterial(color, sortingLayerName, sortingOrder);
+    }
+
+    // 문자열 키로 색 변경 (인스펙터 팔레트 사용)
+    public bool TrySetLightColorByKey(string key)
+    {
+        if (string.IsNullOrWhiteSpace(key) || colorMap == null) return false;
+        if (!colorMap.TryGetValue(key, out var picked)) return false;
+        SetLightColor(picked);
+        return true;
+    }
+
+    public void ChangeFlashlightInverted()
+    {
+        if (TrySetLightColorByKey("Inverted"))
+        {
+            if (visualComponent != null)
+                visualComponent.UpdateMaterial(color, sortingLayerName, sortingOrder);
+        }
+    }
+    public void ChangeFlashlightNormal()
+    {
+        if (TrySetLightColorByKey("Normal"))
+        {
+            if (visualComponent != null)
+                visualComponent.UpdateMaterial(color, sortingLayerName, sortingOrder);
+        }
+    }
+
+    public void FlashlightOff()
+    {
+        SetOn(false);
+    }
+    public void FlashlightOn()
+    {
+        SetOn(true);
+    }
+
+
+
+
+#endregion
+
+
+#region WorldStateManager Event Handling
+    private void SubscribeWorldEvents()
+    {
+        if (worldStateManager == null)
+            worldStateManager = FindFirstObjectByType<WorldStateManager>();
+        if (worldStateManager != null)
+            worldStateManager.onIsInvertedChanged.AddListener(HandleInvertedChanged);
+    }
+
+    private void UnsubscribeWorldEvents()
+    {
+        if (worldStateManager != null)
+            worldStateManager.onIsInvertedChanged.RemoveListener(HandleInvertedChanged);
+    }
+
+    // [추가] 첫 프레임 동기화
+    private void SyncInvertedImmediate()
+    {
+        if (worldStateManager != null)
+            HandleInvertedChanged(worldStateManager.IsInverted);
+    }
+
+    // [추가] 콜백: 내부 bool 갱신 + 팔레트 색 즉시 반영
+    private void HandleInvertedChanged(bool inverted)
+    {
+        isInverted = inverted;
+        if (inverted) ChangeFlashlightInverted();
+        else          ChangeFlashlightNormal();
+    }
+
+#endregion
+
 }

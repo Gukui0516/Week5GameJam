@@ -6,24 +6,24 @@ using UnityEngine.Events;
 [DisallowMultipleComponent]
 public class WorldStateManager : MonoBehaviour
 {
-    // ¹è°æÀÇ »óÅÂ, ¼ÕÀüµîÀÇ »óÅÂ, ¹İÀüµÇ¾ú´ÂÁö »óÅÂ Ã¼Å©
-    // »ö»ó ¹İÀü, ¸îÃÊ ÈÄ¿¡ ¿ø»ó º¹±Í ±â´É
+    // ë°°ê²½, ì†ì „ë“± ë“± ë°˜ì „ ìƒíƒœê°€ ìˆëŠ” ê²ƒë“¤ ìƒíƒœ
+    // ë°˜ì „ì‹œì¼œì£¼ëŠ” ê¸°ëŠ¥
 
-    // ±âº» »óÅÂ
-    [SerializeField] private bool startBackgroundWhite = false; // ±âº»: °ËÁ¤ ¹è°æ
-    [SerializeField] private bool startFlashlightBlack = false; // ±âº»: ÇÏ¾ç ¼ÕÀüµî
+    // ë””í´íŠ¸ ìƒíƒœ
+    [SerializeField] private bool startBackgroundWhite = false; // ê¸°ë³¸: ê²€ì • ë°°ê²½
+    [SerializeField] private bool startFlashlightBlack = false; // ê¸°ë³¸: í•˜ì–‘ ì†ì „ë“±
 
-    // Events (Inspector ¹ÙÀÎµù¿ë)
+    // Events (Inspectorì—ì„œ ë°”ì¸ë”©ìš©)
     [Serializable] public class Bool2Event : UnityEvent<bool, bool> { } // (bgWhite, lightBlack)
     [SerializeField] private Bool2Event onPaletteFlagsChanged;
-    [SerializeField] private UnityEvent<bool> onIsInvertedChanged;
+    [SerializeField] public UnityEvent<bool> onIsInvertedChanged;
 
-    // ÀĞ±â Àü¿ë »óÅÂ
+    // ìƒíƒœ í”Œë˜ê·¸
     public bool BackgroundIsWhite { get; private set; }
     public bool FlashlightIsBlack { get; private set; }
     public bool IsInverted => BackgroundIsWhite && FlashlightIsBlack;
 
-    Coroutine invertCo; // ¾ÆÀÌÅÛ Áö¼Ó ½Ã°£ ³¡³ª¸é ÀÚµ¿À¸·Î ¿ø·¡ »óÅÂ·Î º¹±Í
+    Coroutine invertCo; // ì•„ì´í…œ ì§€ì†ì‹œê°„
 
     void Awake()
     {
