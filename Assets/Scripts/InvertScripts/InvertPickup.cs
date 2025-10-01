@@ -1,23 +1,26 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 [DisallowMultipleComponent]
-public class InvertPickup : MonoBehaviour
+public class InvertPickup : MonoBehaviour, Item
 {
-    // ¾ÆÀÌÅÛÀÌ¶û ÇÃ·¹ÀÌ¾î Ãæµ¹ÇÑ »ç½Ç¸¸ worldstatemanager·Î Àü´Ş
+    // ì•„ì´í…œì´ë‘ í”Œë ˆì´ì–´ ì¶©ëŒí•œ ì‚¬ì‹¤ë§Œ worldstatemanagerë¡œ ì „ë‹¬
 
     [Header("Settings")]
-    [SerializeField, Min(0f)] private float invertDuration = 5f; // ¾ÆÀÌÅÛ Áö¼Ó ½Ã°£
+    [SerializeField, Min(0f)] private float invertDuration = 5f; // ì•„ì´í…œ ì§€ì† ì‹œê°„
     [SerializeField] private string playerTag = "Player";
 
     [Header("Refs")]
-    [SerializeField] private WorldStateManager world; // ÀÎ½ºÆåÅÍ¿¡¼­ ÇÒ´ç
+    [SerializeField] private WorldStateManager world; // ì¸ìŠ¤í™í„°ì—ì„œ í• ë‹¹
 
-    void OnTriggerEnter2D(Collider2D other)
+    public void ActiveItem()
     {
-        if (!other.CompareTag(playerTag)) return;
-        if (!world) return;
-
-        Debug.Log("¾ÆÀÌÅÛ ¸ÔÀ½");
+        if (!world) 
+        {
+            Debug.Log("WorldStateManagerê°€ ì—°ê²°ë˜ì§€ ì•ŠìŒ");
+            return;
+        }
+        Debug.Log("ì•„ì´í…œ ë¨¹ìŒ");
         world.ActivateInversion(invertDuration);
+        Destroy(gameObject);
     }
 }
