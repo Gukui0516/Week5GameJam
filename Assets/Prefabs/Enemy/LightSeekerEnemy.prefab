@@ -289,12 +289,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   enemyType: 1
-  speed: 6
+  speed: 10
   stoppingDistance: 0.5
   lightSeekerBaseSpeed: 2
-  speedIncreaseRate: 2
-  speedIncreaseInterval: 0.2
+  speedIncreaseRate: 0.1
+  speedIncreaseInterval: 1.1
   maxSpeed: 16
+  despawnDistance: 25
+  despawnCheckInterval: 1
   useOutline: 1
   eyesVisibleDistance: 2
   worldStateManager: {fileID: 0}
