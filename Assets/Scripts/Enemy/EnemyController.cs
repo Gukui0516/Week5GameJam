@@ -30,7 +30,6 @@ public class EnemyController : MonoBehaviour
     [Header("Visibility Settings")]
     [SerializeField] private bool useOutline = false; // 아웃라인 사용 여부
     [SerializeField] private float eyesVisibleDistance = 10f; // Eyes가 보이는 거리
-    [SerializeField] private float lightSeekerVisibilityDistance = 10f; // LightSeeker가 흰색으로 보이는 거리
 
     [SerializeField] private WorldStateManager worldStateManager;
 
@@ -154,7 +153,16 @@ public class EnemyController : MonoBehaviour
         if (useOutline && enemyOutline != null)
         {
             enemyOutline.SetOutlineVisible(true); // 아웃라인 사용하면 항상 켜짐
-            UpdateOutlineColor(); // 초기 색상 설정
+
+            // LightSeeker는 항상 검은색, Normal은 현재 반전 상태에 맞는 색상 설정
+            if (enemyType == EnemyType.LightSeeker)
+            {
+                enemyOutline.SetOutlineColor(Color.black);
+            }
+            else
+            {
+                enemyOutline.SetOutlineColor(isInverted ? Color.white : Color.black);
+            }
         }
         else if (enemyOutline != null)
         {
@@ -359,16 +367,9 @@ public class EnemyController : MonoBehaviour
 
         // Eyes 업데이트
         UpdateEyesVisibility(distance);
-        UpdateEyesColor(); // Eyes 색상 업데이트
-
-        // 아웃라인 색상 업데이트 (거리에 따라)
-        if (useOutline && enemyOutline != null)
-        {
-            UpdateOutlineColor();
-        }
     }
 
-    // Eyes 업데이트 - 거리에 따라 표시
+    // Eyes 업데이트 - Normal은 거리만, LightSeeker는 항상 보임
     private void UpdateEyesVisibility(float distance)
     {
         if (eyesObject == null) return;
@@ -377,16 +378,8 @@ public class EnemyController : MonoBehaviour
 
         if (enemyType == EnemyType.LightSeeker)
         {
-            // 반전 상태일 때는 거리 상관없이 항상 보임
-            if (isInverted)
-            {
-                shouldBeActive = true;
-            }
-            // 평소: 손전등 안에 있거나 거리 내에 있으면 눈 보임
-            else
-            {
-                shouldBeActive = isInLight || distance <= lightSeekerVisibilityDistance;
-            }
+            // LightSeeker: 항상 눈 보임
+            shouldBeActive = true;
         }
         else
         {
@@ -400,85 +393,18 @@ public class EnemyController : MonoBehaviour
         }
     }
 
-    // Eyes 색상 업데이트 - 손전등 상태에 따라
-    private void UpdateEyesColor()
-    {
-        if (eyesObject == null) return;
-
-        if (enemyType == EnemyType.LightSeeker)
-        {
-            Color targetColor;
-
-            // 반전 상태일 때는 무조건 검은색
-            if (isInverted)
-            {
-                targetColor = Color.black;
-            }
-            else if (isInLight)
-            {
-                // 평소 + 손전등 안 → 검은색 눈
-                targetColor = Color.black;
-            }
-            else
-            {
-                // 평소 + 손전등 밖 → 흰색 눈
-                targetColor = Color.white;
-            }
-
-            // Eyes의 모든 자식 오브젝트의 색상 변경
-            SpriteRenderer[] childRenderers = eyesObject.GetComponentsInChildren<SpriteRenderer>();
-            foreach (SpriteRenderer renderer in childRenderers)
-            {
-                renderer.color = targetColor;
-            }
-        }
-        else
-        {
-            // Normal: 흰색 눈 유지
-            SpriteRenderer[] childRenderers = eyesObject.GetComponentsInChildren<SpriteRenderer>();
-            foreach (SpriteRenderer renderer in childRenderers)
-            {
-                renderer.color = Color.white;
-            }
-        }
-    }
-
     // 현재 상태에 맞는 아웃라인 색상 업데이트
     private void UpdateOutlineColor()
     {
-        if (enemyOutline == null || player == null) return;
+        if (enemyOutline == null) return;
 
+        // LightSeeker는 항상 검은색, Normal만 반전에 영향받음
         if (enemyType == EnemyType.LightSeeker)
         {
-            // 반전 상태일 때는 무조건 검은색
-            if (isInverted)
-            {
-                enemyOutline.SetOutlineColor(Color.black);
-            }
-            else if (isInLight)
-            {
-                // 평소 + 손전등 안 → 검은색 아웃라인
-                enemyOutline.SetOutlineColor(Color.black);
-            }
-            else
-            {
-                float distance = Vector2.Distance(transform.position, player.position);
-
-                if (distance <= lightSeekerVisibilityDistance)
-                {
-                    // 평소 + 손전등 밖 + 가까움 → 흰색 아웃라인
-                    enemyOutline.SetOutlineColor(Color.white);
-                }
-                else
-                {
-                    // 평소 + 손전등 밖 + 멀음 → 검은색 (안 보임)
-                    enemyOutline.SetOutlineColor(Color.black);
-                }
-            }
+            enemyOutline.SetOutlineColor(Color.black);
         }
         else
         {
-            // Normal: 반전 상태에 따라 색상 변경
             Color outlineColor = isInverted ? Color.white : Color.black;
             enemyOutline.SetOutlineColor(outlineColor);
         }
@@ -493,28 +419,10 @@ public class EnemyController : MonoBehaviour
         isInverted = inverted;
         Debug.Log($"{gameObject.name} 반전 상태: {inverted}");
 
-        // 반전 상태가 바뀌면 즉시 Visibility 업데이트
-        if (enemyType == EnemyType.LightSeeker)
+        // 반전 상태에 따라 아웃라인 색상 변경 (useOutline이 true이고 Normal일 때만)
+        if (useOutline && enemyOutline != null && enemyType != EnemyType.LightSeeker)
         {
-            if (player != null)
-            {
-                float distance = Vector2.Distance(transform.position, player.position);
-                UpdateEyesVisibility(distance);
-                UpdateEyesColor();
-            }
-
-            if (useOutline && enemyOutline != null)
-            {
-                UpdateOutlineColor();
-            }
-        }
-        else
-        {
-            // 반전 상태에 따라 아웃라인 색상 변경 (useOutline이 true이고 Normal일 때만)
-            if (useOutline && enemyOutline != null)
-            {
-                UpdateOutlineColor();
-            }
+            UpdateOutlineColor();
         }
     }
 

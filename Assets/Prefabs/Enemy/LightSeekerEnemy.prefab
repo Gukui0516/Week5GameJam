@@ -299,10 +299,9 @@ MonoBehaviour:
   despawnCheckInterval: 1
   useOutline: 1
   eyesVisibleDistance: 2
-  lightSeekerVisibilityDistance: 5
   worldStateManager: {fileID: 0}
-  enemyOutline: {fileID: 5101757877946332033}
-  eyesObject: {fileID: 793540923169711125}
+  enemyOutline: {fileID: 0}
+  eyesObject: {fileID: 0}
   enableRotation: 1
   rotationSpeed: 10
   rotationOffset: 270

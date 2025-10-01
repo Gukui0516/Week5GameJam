@@ -278,7 +278,6 @@ MonoBehaviour:
   despawnCheckInterval: 1
   useOutline: 0
   eyesVisibleDistance: 4
-  lightSeekerVisibilityDistance: 10
   worldStateManager: {fileID: 0}
   enemyOutline: {fileID: 0}
   eyesObject: {fileID: 0}
