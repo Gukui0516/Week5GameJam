@@ -5,7 +5,7 @@ using UnityEngine.SceneManagement;
 
 public enum KeyKind
 {
-    Red, Blue, Green, Yellow
+    Circle, Clover, Heart, Square
 }
 
 [DisallowMultipleComponent]

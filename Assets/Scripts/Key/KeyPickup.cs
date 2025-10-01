@@ -4,7 +4,7 @@ using UnityEngine;
 public class KeyPickup : MonoBehaviour, Item
 {
     [Header("Key")]
-    public KeyKind kind = KeyKind.Red;
+    public KeyKind kind = KeyKind.Circle;
     [Min(1)] public int amount = 1;
 
     [Header("Destroy")]

@@ -201,7 +201,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: YELLOW
+  m_text: Square
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 48c887f8d4420de4d835acb74e3245f1, type: 2}
   m_sharedMaterial: {fileID: 4906737786915171878, guid: 48c887f8d4420de4d835acb74e3245f1, type: 2}
@@ -337,7 +337,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: BLUE
+  m_text: Heart
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 48c887f8d4420de4d835acb74e3245f1, type: 2}
   m_sharedMaterial: {fileID: 4906737786915171878, guid: 48c887f8d4420de4d835acb74e3245f1, type: 2}
@@ -445,11 +445,11 @@ RectTransform:
   - {fileID: 7613282306626782982}
   m_Father: {fileID: 1886706391552022547}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 1, y: 0}
-  m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: -50, y: 50}
+  m_AnchorMin: {x: 1, y: 1}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 500, y: 220}
-  m_Pivot: {x: 1, y: 0}
+  m_Pivot: {x: 1, y: 1}
 --- !u!222 &8428916264022691379
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -471,7 +471,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.078431375}
+  m_Color: {r: 1, g: 1, b: 1, a: 0}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -715,7 +715,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: RED
+  m_text: Circle
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 48c887f8d4420de4d835acb74e3245f1, type: 2}
   m_sharedMaterial: {fileID: 4906737786915171878, guid: 48c887f8d4420de4d835acb74e3245f1, type: 2}
@@ -851,9 +851,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'GREEN
-
-'
+  m_text: Clover
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 48c887f8d4420de4d835acb74e3245f1, type: 2}
   m_sharedMaterial: {fileID: 4906737786915171878, guid: 48c887f8d4420de4d835acb74e3245f1, type: 2}
@@ -937,7 +935,7 @@ GameObject:
   - component: {fileID: 1313158064417381051}
   - component: {fileID: 9156701863630900077}
   m_Layer: 5
-  m_Name: Key_Yellow
+  m_Name: Key_Square
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -992,7 +990,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: -6850440246818259433, guid: 320c0fbb37f45814981b6ce3b8c6787e, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -1017,7 +1015,7 @@ MonoBehaviour:
   keyKind: 3
   icon: {fileID: 1313158064417381051}
   countText: {fileID: 50324411898153865}
-  inactiveAlpha: 0.19607843
+  inactiveAlpha: 0
   activeAlpha: 1
   fadeDuration: 0.12
   resetVisualOnSceneLoad: 1
@@ -1034,7 +1032,7 @@ GameObject:
   - component: {fileID: 3462346994137012062}
   - component: {fileID: 1046311015090557915}
   m_Layer: 5
-  m_Name: Key_Red
+  m_Name: Key_Circle
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1089,7 +1087,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: 8516337289528364851, guid: 9547825e5f2cfeb4b9b9b1f9507149fe, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -1114,7 +1112,7 @@ MonoBehaviour:
   keyKind: 0
   icon: {fileID: 3462346994137012062}
   countText: {fileID: 8239041987122012024}
-  inactiveAlpha: 0.19607843
+  inactiveAlpha: 0
   activeAlpha: 1
   fadeDuration: 0.12
   resetVisualOnSceneLoad: 1
@@ -1131,7 +1129,7 @@ GameObject:
   - component: {fileID: 9036872014414385690}
   - component: {fileID: 3916433496305416536}
   m_Layer: 5
-  m_Name: Key_Blue
+  m_Name: Key_Heart
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1186,7 +1184,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: 4479173107011011322, guid: 90ec0af6ed479d84cb90b177c139fd41, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -1208,10 +1206,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: edc9f474e738a6a458977db79b1d7c95, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  keyKind: 1
+  keyKind: 2
   icon: {fileID: 9036872014414385690}
   countText: {fileID: 7242880521216241478}
-  inactiveAlpha: 0.19607843
+  inactiveAlpha: 0
   activeAlpha: 1
   fadeDuration: 0.12
   resetVisualOnSceneLoad: 1
@@ -1276,7 +1274,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 1000
   m_TargetDisplay: 0
 --- !u!114 &8238461720661561680
 MonoBehaviour:
@@ -1739,7 +1737,7 @@ GameObject:
   - component: {fileID: 6076827502187896916}
   - component: {fileID: 3477159519741092935}
   m_Layer: 5
-  m_Name: Key_Green
+  m_Name: Key_Clover
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1794,7 +1792,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: 2441859494189815494, guid: dea52d8583d2f404f9190fce51035457, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -1816,10 +1814,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: edc9f474e738a6a458977db79b1d7c95, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  keyKind: 2
+  keyKind: 1
   icon: {fileID: 6076827502187896916}
   countText: {fileID: 6804195569072912758}
-  inactiveAlpha: 0.19607843
+  inactiveAlpha: 0
   activeAlpha: 1
   fadeDuration: 0.12
   resetVisualOnSceneLoad: 1
