@@ -42,6 +42,7 @@ public class EnemyOutline : MonoBehaviour
 
     void OnValidate()
     {
+#if UNITY_EDITOR
         if (Application.isPlaying)
         {
             spriteRenderer = GetComponent<SpriteRenderer>();
@@ -60,6 +61,7 @@ public class EnemyOutline : MonoBehaviour
                 }
             };
         }
+#endif
     }
 
     void SetupChildObject()

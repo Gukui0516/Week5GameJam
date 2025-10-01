@@ -38,7 +38,7 @@ public class EnemySpawner : MonoBehaviour
     private Camera mainCamera;
     private Transform player;
     private int totalEnemyCount = 0;
-    private int lastAppliedStage = -1; // 마지막으로 적용된 스테이지 추적
+    private int lastAppliedStage = -1;
 
     private Dictionary<GameObject, EnemySpawnData> instanceToData = new Dictionary<GameObject, EnemySpawnData>();
 
@@ -68,32 +68,27 @@ public class EnemySpawner : MonoBehaviour
         mainCamera = Camera.main;
         player = GameObject.FindGameObjectWithTag("Player")?.transform;
 
-        // 스테이지에 따른 적 설정 적용
-        ApplyStageEnemySettings();
+        if (player == null)
+        {
+            Debug.LogError("[EnemySpawner] Player not found! Make sure Player has 'Player' tag.");
+        }
 
+        ApplyStageEnemySettings();
         StartAllSpawners();
     }
 
     void Update()
     {
-        // 매 프레임 스테이지 변경 체크
         if (GameManager.Instance != null)
         {
-            int currentStage = (int)GameManager.Instance.Current;
+            int currentStage = (int)GameManager.Instance.CurrentStage;
             if (currentStage != lastAppliedStage)
             {
                 Debug.Log($"[EnemySpawner] Stage changed: {lastAppliedStage} -> {currentStage}");
 
-                // 기존 스폰 중지
                 StopAllSpawners();
-
-                // 모든 적 제거
                 ClearAllEnemies();
-
-                // 새 스테이지 설정 적용
                 ApplyStageEnemySettings();
-
-                // 스폰 재시작
                 StartAllSpawners();
             }
         }
@@ -117,7 +112,7 @@ public class EnemySpawner : MonoBehaviour
         }
 
         int currentStage = (int)GameManager.Instance.CurrentStage;
-        lastAppliedStage = currentStage; // 적용된 스테이지 기록
+        lastAppliedStage = currentStage;
 
         Debug.Log($"[EnemySpawner] Applying enemy settings for Stage: {currentStage}");
 
@@ -152,7 +147,6 @@ public class EnemySpawner : MonoBehaviour
 
     void ClearAllEnemies()
     {
-        // 활성화된 모든 적을 풀로 반환
         foreach (var kvp in new Dictionary<GameObject, EnemySpawnData>(instanceToData))
         {
             GameObject enemy = kvp.Key;
@@ -253,7 +247,7 @@ public class EnemySpawner : MonoBehaviour
         {
             yield return new WaitForSeconds(data.spawnInterval);
 
-            if (data.currentCount < data.maxCount)
+            if (data.currentCount < data.maxCount && player != null)
             {
                 Vector2 spawnPosition = GetRandomSpawnPosition();
 
@@ -278,7 +272,8 @@ public class EnemySpawner : MonoBehaviour
 
     Vector2 GetRandomSpawnPosition()
     {
-        Vector2 center = mainCamera.transform.position;
+        // 플레이어 위치를 중심으로 스폰
+        Vector2 center = player != null ? (Vector2)player.position : Vector2.zero;
         float randomAngle = Random.Range(0f, 360f) * Mathf.Deg2Rad;
         float x = center.x + Mathf.Cos(randomAngle) * spawnDistance;
         float y = center.y + Mathf.Sin(randomAngle) * spawnDistance;
