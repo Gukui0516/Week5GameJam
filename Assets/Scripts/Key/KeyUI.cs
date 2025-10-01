@@ -1,3 +1,4 @@
+// Assets/Scripts/UI/KeyUI.cs  (전체 교체)
 using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -9,17 +10,18 @@ public class KeyUI : MonoBehaviour
 {
     [Header("Binding")]
     [SerializeField] private KeyKind keyKind = KeyKind.Clover;
-    [SerializeField] private Image icon;                  // 아이콘 이미지
-    [SerializeField] private TMP_Text countText;          // 수량 텍스트 (예: x0)
-    [SerializeField] private TMP_Text titleText;          // 타이틀 텍스트 (예: CLOVER)
+    [SerializeField] private Image icon;                       
 
-    [Header("Visual")]
-    [Range(0,1)] [SerializeField] private float inactiveAlpha = 0f;     // 미보유 시 투명도
-    [Range(0,1)] [SerializeField] private float activeAlpha   = 1f;     // 보유 시 투명도
-    [SerializeField] private float fadeDuration = 0.12f;                 // 페이드 시간
+    [Header("Visual Alpha (0~1)")]
+    [Tooltip("요구하지 않는 열쇠")]
+    [Range(0,1)] [SerializeField] private float alphaNotRequired = 0f;          // 0
+    [Tooltip("요구하지만 아직 미획득")]
+    [Range(0,1)] [SerializeField] private float alphaRequiredNotOwned = 30f/255f; // 30
+    [Tooltip("요구하고 획득함")]
+    [Range(0,1)] [SerializeField] private float alphaRequiredOwned = 1f;        // 255
+    [SerializeField] private float fadeDuration = 0.12f;                 
 
     [Header("Behavior")]
-    [Tooltip("씬 전환 시 UI 표시를 0개 상태로 초기화")]
     [SerializeField] private bool resetVisualOnSceneLoad = true;
 
     private KeyCollector collector;
@@ -28,7 +30,7 @@ public class KeyUI : MonoBehaviour
     private void Awake()
     {
         if (icon == null) icon = GetComponent<Image>();
-        TryAutoBindTexts(); // count/title 자동 매핑 시도
+        //TryAutoBindTexts();
     }
 
     private void OnEnable()
@@ -37,8 +39,9 @@ public class KeyUI : MonoBehaviour
         if (resetVisualOnSceneLoad)
             SceneManager.sceneLoaded += OnSceneLoaded;
 
-        // 첫 프레임 동기화
-        RefreshFromCollector();
+        KeyStageContext.RequirementsChanged += OnRequirementsChanged;
+
+        RefreshFromCollectorAndStage();
     }
 
     private void OnDisable()
@@ -46,28 +49,29 @@ public class KeyUI : MonoBehaviour
         UnhookCollector();
         if (resetVisualOnSceneLoad)
             SceneManager.sceneLoaded -= OnSceneLoaded;
+
+        KeyStageContext.RequirementsChanged -= OnRequirementsChanged;
     }
 
     private void OnSceneLoaded(Scene s, LoadSceneMode m)
     {
-        // 표시만 0으로 리셋
-        SetCountInstant(0);
-        // 새 씬의 수집가를 다시 찾고 동기화
-        UnhookCollector();
-        TryHookCollector();
-        RefreshFromCollector();
+        // 새 씬 기준으로 다시 동기화
+        RefreshFromCollectorAndStage();
+    }
+
+    private void OnRequirementsChanged()
+    {
+        RefreshFromCollectorAndStage();
     }
 
     private void TryHookCollector()
     {
-        if (collector != null) return;
 #if UNITY_2023_1_OR_NEWER || UNITY_6_0_OR_NEWER
         collector = FindFirstObjectByType<KeyCollector>(FindObjectsInactive.Exclude);
 #else
         collector = FindObjectOfType<KeyCollector>();
 #endif
         if (collector == null) return;
-
         collector.onPicked.AddListener(OnKeyChanged);
         collector.onUsed.AddListener(OnKeyChanged);
     }
@@ -83,31 +87,20 @@ public class KeyUI : MonoBehaviour
     private void OnKeyChanged(KeyKind kind, int newCount)
     {
         if (kind != keyKind) return;
-        SetCount(newCount);
+        RefreshFromCollectorAndStage();
     }
 
-    private void RefreshFromCollector()
+    private void RefreshFromCollectorAndStage()
     {
-        if (collector == null)
-        {
-            // 수집가가 아직 없으면 비활성 비주얼
-            SetCountInstant(0);
-            return;
-        }
-        SetCountInstant(collector.Get(keyKind));
-    }
+        int count = collector ? collector.Get(keyKind) : 0;
+        //if (countText) countText.text = $"x{Mathf.Max(0, count)}";
 
-    private void SetCount(int value)
-    {
-        if (countText != null) countText.text = $"x{Mathf.Max(0, value)}";
-        float targetA = value > 0 ? activeAlpha : inactiveAlpha;
+        bool required = KeyStageContext.IsRequired(keyKind);
+        float targetA = required
+            ? (count > 0 ? alphaRequiredOwned : alphaRequiredNotOwned)
+            : alphaNotRequired;
+
         FadeTo(targetA);
-    }
-
-    private void SetCountInstant(int value)
-    {
-        if (countText != null) countText.text = $"x{Mathf.Max(0, value)}";
-        SetAlphaAll(value > 0 ? activeAlpha : inactiveAlpha);
     }
 
     private void FadeTo(float targetA)
@@ -121,85 +114,58 @@ public class KeyUI : MonoBehaviour
         float t = 0f;
 
         float startIconA = icon ? icon.color.a : 0f;
-        float startCountA = countText ? countText.color.a : 0f;
-        float startTitleA = titleText ? titleText.color.a : 0f;
+        //float startCountA = countText ? countText.color.a : 0f;
+        //float startTitleA = titleText ? titleText.color.a : 0f;
 
         Color ic = icon ? icon.color : default;
-        Color cc = countText ? countText.color : default;
-        Color tc = titleText ? titleText.color : default;
+        //Color cc = countText ? countText.color : default;
+        //Color tc = titleText ? titleText.color : default;
 
         while (t < dur)
         {
             t += Time.deltaTime;
             float k = dur <= 0f ? 1f : Mathf.Clamp01(t / dur);
 
-            if (icon)
-                icon.color = new Color(ic.r, ic.g, ic.b, Mathf.Lerp(startIconA, targetA, k));
-            if (countText)
-                countText.color = new Color(cc.r, cc.g, cc.b, Mathf.Lerp(startCountA, targetA, k));
-            if (titleText)
-                titleText.color = new Color(tc.r, tc.g, tc.b, Mathf.Lerp(startTitleA, targetA, k));
+            if (icon)     icon.color     = new Color(ic.r, ic.g, ic.b, Mathf.Lerp(startIconA, targetA, k));
+            //if (countText) countText.color = new Color(cc.r, cc.g, cc.b, Mathf.Lerp(startCountA, targetA, k));
+            //if (titleText) titleText.color = new Color(tc.r, tc.g, tc.b, Mathf.Lerp(startTitleA, targetA, k));
 
             yield return null;
         }
-
         SetAlphaAll(targetA);
     }
 
     private void SetAlphaAll(float a)
     {
-        SetIconAlpha(a);
-        SetTextAlpha(countText, a);
-        SetTextAlpha(titleText, a);
+        if (icon)      icon.color     = new Color(icon.color.r, icon.color.g, icon.color.b, a);
+        //if (countText) countText.color = new Color(countText.color.r, countText.color.g, countText.color.b, a);
+        //if (titleText) titleText.color = new Color(titleText.color.r, titleText.color.g, titleText.color.b, a);
     }
-
-    private void SetIconAlpha(float a)
-    {
-        if (!icon) return;
-        Color c = icon.color;
-        icon.color = new Color(c.r, c.g, c.b, a);
-    }
-
-    private void SetTextAlpha(TMP_Text t, float a)
-    {
-        if (!t) return;
-        Color c = t.color;
-        t.color = new Color(c.r, c.g, c.b, a);
-    }
-
+    /*
     private void TryAutoBindTexts()
     {
-        // 인스펙터로 이미 꽂혀 있으면 존중
         if (countText != null && titleText != null) return;
-
         var tmps = GetComponentsInChildren<TMP_Text>(true);
         if (tmps == null || tmps.Length == 0) return;
-
-        // 이름 힌트 기반 매핑
         foreach (var t in tmps)
         {
             string n = t.name.ToLowerInvariant();
             if (countText == null && n.Contains("count")) { countText = t; continue; }
             if (titleText == null && n.Contains("title")) { titleText = t; continue; }
         }
-
-        // 여전히 비어 있으면 순서로 보정
-        if (countText == null) countText = tmps[0];
+        //if (countText == null) countText = tmps[0];
         if (titleText == null && tmps.Length > 1)
         {
-            // 다른 것 하나를 타이틀로
             for (int i = 0; i < tmps.Length; i++)
-            {
                 if (tmps[i] != countText) { titleText = tmps[i]; break; }
-            }
         }
-    }
+    }*/
 
 #if UNITY_EDITOR
     private void OnValidate()
     {
         if (icon == null) icon = GetComponent<Image>();
-        TryAutoBindTexts();
+        //TryAutoBindTexts();
     }
 #endif
 }
