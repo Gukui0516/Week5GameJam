@@ -113,7 +113,7 @@ GameObject:
   - component: {fileID: 2392970051944943344}
   - component: {fileID: 223945965727008865}
   - component: {fileID: 8342198941621022990}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: NomalEnemy
   m_TagString: Enemy
   m_Icon: {fileID: 0}
