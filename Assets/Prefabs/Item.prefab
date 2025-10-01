@@ -12,6 +12,8 @@ GameObject:
   - component: {fileID: 6081200825626651932}
   - component: {fileID: 3749932243992904206}
   - component: {fileID: 8390991761886410771}
+  - component: {fileID: 4020911044838561438}
+  - component: {fileID: 779867169406584130}
   m_Layer: 0
   m_Name: Item
   m_TagString: Item
@@ -150,3 +152,39 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 1, y: 1}
   m_EdgeRadius: 0
+--- !u!114 &4020911044838561438
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4318164382633977560}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d30263ea3bd038e489c52c61c53ae6b9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  lineSprite: {fileID: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  sortingLayerName: Default
+  orderInLayer: 0
+  intervalSeconds: 4
+  growDuration: 3
+  holdDuration: 0.05
+  fadeDuration: 0.25
+  travelDuration: 5
+  travelSpeed: 3
+  lengthRange: {x: 2, y: 5}
+  thickness: 0.3
+--- !u!114 &779867169406584130
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4318164382633977560}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 494d490b6591ead48911150481fe0141, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
