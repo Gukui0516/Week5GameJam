@@ -20,7 +20,7 @@ public class ItemSpawner : MonoBehaviour
 
     [Header("Despawn Settings")]
     [SerializeField] private float despawnDistance = 25f;
-    [SerializeField] private float optionalMaxLifetime = -1f;
+    [SerializeField] private float optionalMaxLifetime = -1f; // 거리 기반 반환 조건 안 걸릴 때 안전장치로
 
     [Header("Refs")]
     [SerializeField] private WorldStateManager world; // 씬의 매니저 연결(권장)
@@ -28,7 +28,6 @@ public class ItemSpawner : MonoBehaviour
     private Camera mainCamera;
     private Transform player;
     private ObjectPool<GameObject> itemPool;
-    private int currentItemCount = 0;
 
     public static ItemSpawner Instance { get; private set; }
 
@@ -44,9 +43,11 @@ public class ItemSpawner : MonoBehaviour
         // world 참조가 비어 있으면 런타임에서 한 번 찾아서 캐시(폴백)
         if (!world)
         {
-
+#if UNITY_2023_1_OR_NEWER
             world = FindFirstObjectByType<WorldStateManager>();
-
+#else
+            world = FindObjectOfType<WorldStateManager>();
+#endif
             if (!world)
                 Debug.LogWarning("[ItemSpawner] WorldStateManager를 찾지 못했습니다. 인스펙터에 연결하거나 씬에 1개 배치하세요.");
         }
@@ -92,36 +93,38 @@ public class ItemSpawner : MonoBehaviour
     void OnGetItem(GameObject item)
     {
         item.SetActive(true);
-        currentItemCount++;
 
         // 1) 거리/수명 체크 세팅
         var pooled = item.GetComponent<PooledItem>();
-        pooled.Setup(
-            player,
-            despawnDistance,
-            ReleaseItem,            // 아이템이 직접 풀로 돌아가도록 콜백 전달
-            optionalMaxLifetime     // -1이면 끔
-        );
-
-        // 2) 월드 매니저 주입(핵심)
-        // 프리팹 루트에 InvertPickup이 붙어있을 수도, 자식에 있을 수도 있으니 둘 다 시도
-        if (item.TryGetComponent<InvertPickup>(out var pickup)
-            || item.GetComponentInChildren<InvertPickup>(true) is InvertPickup childPickup && (pickup = childPickup) != null)
+        if (pooled != null)
         {
-            // InvertPickup에 이미 만든 Init(WorldStateManager) 사용
-            pickup.Init(world);
+            pooled.Setup(
+                player,
+                despawnDistance,
+                ReleaseItem,            // 아이템이 직접 풀로 돌아가도록 콜백 전달
+                optionalMaxLifetime     // -1이면 끔
+            );
         }
         else
         {
-            // 다른 타입의 아이템이 올 수도 있으니 로그는 정보용으로만
-            // Debug.Log($"[ItemSpawner] InvertPickup 없음: {item.name}");
+            Debug.LogWarning($"[ItemSpawner] PooledItem 누락: {item.name}");
         }
+
+        // 2) 월드 매니저 주입 + 먹힘 시 풀 반환 연결
+        if (item.TryGetComponent<InvertPickup>(out var pickup)
+            || item.GetComponentInChildren<InvertPickup>(true) is InvertPickup childPickup && (pickup = childPickup) != null)
+        {
+            pickup.Init(world);
+            // 먹혔을 때 Release로 되돌아오게
+            pickup.onConsumed = () => ReleaseItem(item);
+        }
+        // 다른 타입의 아이템 가능성은 정보용 로그 생략
     }
 
     void OnReleaseItem(GameObject item)
     {
+        // 풀로 반납 시 비활성화만 (파괴 금지)
         item.SetActive(false);
-        currentItemCount = Mathf.Max(0, currentItemCount - 1);
     }
 
     void OnDestroyItem(GameObject item)
@@ -145,7 +148,8 @@ public class ItemSpawner : MonoBehaviour
         {
             yield return new WaitForSeconds(spawnInterval);
 
-            if (currentItemCount < maxItems)
+            // CountActive 기준으로 생성 제한 판단
+            if (itemPool.CountActive < maxItems)
             {
                 Vector2 spawnPosition = GetRandomSpawnPosition();
 
