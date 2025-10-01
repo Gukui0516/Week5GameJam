@@ -274,11 +274,16 @@ MonoBehaviour:
   speedIncreaseRate: 2
   speedIncreaseInterval: 2
   maxSpeed: 8
+  despawnDistance: 25
+  despawnCheckInterval: 1
   useOutline: 0
   eyesVisibleDistance: 2
   worldStateManager: {fileID: 0}
   enemyOutline: {fileID: 0}
   eyesObject: {fileID: 0}
+  enableRotation: 1
+  rotationSpeed: 10
+  rotationOffset: 270
 --- !u!114 &8342198941621022990
 MonoBehaviour:
   m_ObjectHideFlags: 0
