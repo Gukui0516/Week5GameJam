@@ -484,9 +484,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   itemPrefab: {fileID: 76330069}
-  spawnInterval: 7
-  maxItems: 5
-  spawnDistance: 30
+  spawnInterval: 10
+  maxItems: 3
+  spawnDistance: 20
   defaultPoolCapacity: 10
   maxPoolSize: 20
   despawnDistance: 25
@@ -524,11 +524,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6605330722139649285, guid: fea5c27b999c72b4ab4699f1e4785dfe, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.5083754
+      value: 0.48498818
       objectReference: {fileID: 0}
     - target: {fileID: 6605330722139649285, guid: fea5c27b999c72b4ab4699f1e4785dfe, type: 3}
       propertyPath: m_LocalRotation.z
-      value: 0.86113554
+      value: 0.8745207
       objectReference: {fileID: 0}
     - target: {fileID: 8417029550108410115, guid: fea5c27b999c72b4ab4699f1e4785dfe, type: 3}
       propertyPath: m_LocalPosition.x
