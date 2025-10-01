@@ -349,7 +349,7 @@ public class Flashlight2DVisual : MonoBehaviour
             return;
 
         insideColliders.Add(target);
-        Debug.Log($"Flashlight2D 감지: {target.name}");
+//        Debug.Log($"Flashlight2D 감지: {target.name}");
         parent.NotifyTargetEnter(target);
     }
 
@@ -361,7 +361,7 @@ public class Flashlight2DVisual : MonoBehaviour
         if (target == null) return; // 이미 파괴된 오브젝트일 수 있음
 
         insideColliders.Remove(target);
-        Debug.Log($"Flashlight2D 벗어남: {target.name}");
+//        Debug.Log($"Flashlight2D 벗어남: {target.name}");
         parent.NotifyTargetExit(target);
     }
 
@@ -399,6 +399,7 @@ public class Flashlight2DVisual : MonoBehaviour
             e.Die();
             count++;
         }
+        
         return count;
     }
     
