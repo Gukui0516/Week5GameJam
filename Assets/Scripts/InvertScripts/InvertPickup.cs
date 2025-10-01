@@ -11,12 +11,17 @@ public class InvertPickup : MonoBehaviour, Item
     [Header("Refs")]
     [SerializeField] private WorldStateManager world; // (옵션) 에디터에서 연결해두면 우선 사용
 
+    private bool consumed = false;
+
     /// <summary>스포너/팩토리에서 주입</summary>
     public void Init(WorldStateManager manager)
     {
         world = manager;
     }
-
+    private void OnEnable()
+    {
+        consumed = false; // 풀에서 다시 꺼낼 때 리셋
+    }
     /// <summary>
     /// 스포너가 연결해줄 수 있는 콜백.
     /// 예) pickup.onConsumed = () => ReleaseItem(item);
@@ -38,6 +43,9 @@ public class InvertPickup : MonoBehaviour, Item
 
     public void ActiveItem()
     {
+        if (consumed) return; // 이미 소비된 아이템
+        consumed = true;
+
         if (!world)
         {
             Debug.LogWarning("[InvertPickup] WorldStateManager가 연결되지 않음");
@@ -47,10 +55,7 @@ public class InvertPickup : MonoBehaviour, Item
         Debug.Log("[InvertPickup] 아이템 먹음");
         world.ActivateInversion(invertDuration);
 
-        // 1) 스포너 측에서 연결해준 반환 콜백이 있으면 그걸 먼저 호출
-        onConsumed?.Invoke();
-
-        // 2) PooledItem이 붙어 있으면 직접 풀로 반환 (Destroy 금지)
+        // PooledItem이 있으면 그것만 사용 (onConsumed는 내부적으로 호출됨)
         var pooled = GetComponent<PooledItem>();
         if (pooled != null)
         {
@@ -58,7 +63,13 @@ public class InvertPickup : MonoBehaviour, Item
             return;
         }
 
-        // 3) 마지막 폴백: 그냥 비활성화(CountActive를 줄이도록 Destroy 대신)
-        gameObject.SetActive(false);
+        // PooledItem이 없을 때만 onConsumed 직접 호출
+        onConsumed?.Invoke();
+        
+        // 마지막 폴백: 그냥 비활성화
+        if (gameObject.activeSelf)
+        {
+            gameObject.SetActive(false);
+        }
     }
 }

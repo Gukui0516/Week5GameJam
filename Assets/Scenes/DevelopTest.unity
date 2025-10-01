@@ -1551,11 +1551,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6605330722139649285, guid: fea5c27b999c72b4ab4699f1e4785dfe, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.4022603
+      value: 0.7215761
       objectReference: {fileID: 0}
     - target: {fileID: 6605330722139649285, guid: fea5c27b999c72b4ab4699f1e4785dfe, type: 3}
       propertyPath: m_LocalRotation.z
-      value: 0.9155253
+      value: -0.6923351
       objectReference: {fileID: 0}
     - target: {fileID: 8417029550108410115, guid: fea5c27b999c72b4ab4699f1e4785dfe, type: 3}
       propertyPath: m_LocalPosition.x
@@ -1604,8 +1604,46 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 6083921524223410634, guid: fea5c27b999c72b4ab4699f1e4785dfe, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1613232870}
   m_SourcePrefab: {fileID: 100100000, guid: fea5c27b999c72b4ab4699f1e4785dfe, type: 3}
+--- !u!1 &1613232869 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6083921524223410634, guid: fea5c27b999c72b4ab4699f1e4785dfe, type: 3}
+  m_PrefabInstance: {fileID: 1613232868}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1613232870
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1613232869}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 373fd58e4081c07469e87b16cf7b858b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  counts: 00000000000000000000000000000000
+  onPicked:
+    m_PersistentCalls:
+      m_Calls: []
+  onUsed:
+    m_PersistentCalls:
+      m_Calls: []
+  onAllRequirementsMet:
+    m_PersistentCalls:
+      m_Calls: []
+  onReset:
+    m_PersistentCalls:
+      m_Calls: []
+  integrateWithSceneDirector: 1
+  resetOnTitleLoad: 1
+  resetOnGameLoad: 1
+  resetOnOtherLoads: 0
+  broadcastZeroAfterReset: 1
 --- !u!21 &1721372110
 Material:
   serializedVersion: 8

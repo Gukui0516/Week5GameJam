@@ -310,12 +310,12 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5995896330211935663, guid: 31f0d8a234e03cf459168b0996aa5ce3, type: 3}
       propertyPath: gameScene.sceneName
-      value: FlashLight_Juyoung
+      value: DevelopTest
       objectReference: {fileID: 0}
     - target: {fileID: 5995896330211935663, guid: 31f0d8a234e03cf459168b0996aa5ce3, type: 3}
       propertyPath: gameScene.sceneAsset
       value: 
-      objectReference: {fileID: 102900000, guid: cefb99cf95879514f9d7674ea139c05d, type: 3}
+      objectReference: {fileID: 102900000, guid: 148d76d55e9dc544687946b7e231ecc1, type: 3}
     - target: {fileID: 5995896330211935663, guid: 31f0d8a234e03cf459168b0996aa5ce3, type: 3}
       propertyPath: titleScene.sceneName
       value: TempStart
@@ -362,6 +362,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1162bf72341b59d409f07f0df6690587, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  showOnGUI: 1
 --- !u!4 &1773910136
 Transform:
   m_ObjectHideFlags: 0
