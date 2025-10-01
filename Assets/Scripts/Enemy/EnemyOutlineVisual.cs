@@ -146,7 +146,13 @@ public class EnemyOutlineVisual : MonoBehaviour
             return;
         }
 
-        Material mat = Application.isPlaying ? meshRenderer.material : meshRenderer.sharedMaterial;
+        // Prefab ëª¨ë"œì—ì„œëŠ" sharedMaterialë§Œ ì‚¬ìš©
+#if UNITY_EDITOR
+        bool useSharedMaterial = !Application.isPlaying || UnityEditor.PrefabUtility.IsPartOfPrefabAsset(gameObject);
+#else
+        bool useSharedMaterial = !Application.isPlaying;
+#endif
+        Material mat = useSharedMaterial ? meshRenderer.sharedMaterial : meshRenderer.material;
 
         bool needsNewMaterial = mat == null || mat.shader != shader;
 
@@ -173,13 +179,13 @@ public class EnemyOutlineVisual : MonoBehaviour
             mat.renderQueue = 3000;
         }
 
-        if (Application.isPlaying)
+        if (useSharedMaterial)
         {
-            meshRenderer.material = mat;
+            meshRenderer.sharedMaterial = mat;
         }
         else
         {
-            meshRenderer.sharedMaterial = mat;
+            meshRenderer.material = mat;
         }
 
         meshRenderer.sortingLayerName = sortingLayerName;
