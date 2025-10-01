@@ -24,8 +24,14 @@ public class ExitDoor : MonoBehaviour
     public bool readStageFromGameManager = true;
     [Min(1)] public int overrideStage = 1;
 
-    [Header("Interaction")]
+    [Header("Position Settings")]
+    [SerializeField] private bool autoPositionOnStart = true;
     [SerializeField] private string playerTag = "Player";
+    [SerializeField] private float stage1Distance = 80f;
+    [SerializeField] private float stage2Distance = 120f;
+    [SerializeField] private float stage3Distance = 160f;
+
+    [Header("Interaction")]
     [SerializeField] private KeyCode interactKey = KeyCode.E;
     [SerializeField] private bool consumeOnOpen = true;
 
@@ -59,6 +65,12 @@ public class ExitDoor : MonoBehaviour
             worldspaceUIRoot = FindWorldspaceCanvasInChildren();
         HideUI();
         cachedCollector = FindFirstObjectByType<KeyCollector>();
+    }
+
+    private void Start()
+    {
+        if (autoPositionOnStart)
+            PositionExit();
     }
 
     private void OnDisable()
@@ -128,6 +140,41 @@ public class ExitDoor : MonoBehaviour
             GameManager.Instance.AdvanceStageAndReload();
         else
             Debug.LogWarning("ExitDoor: GameManager 인스턴스 없음.");
+    }
+
+    // ===== Position =====
+
+    private void PositionExit()
+    {
+        GameObject playerObj = GameObject.FindGameObjectWithTag(playerTag);
+        if (playerObj == null)
+        {
+            Debug.LogWarning("ExitDoor: 플레이어를 찾을 수 없습니다.");
+            return;
+        }
+
+        int currentStage = readStageFromGameManager ? GetStageFromGameManagerSafe() : overrideStage;
+        float distance = GetDistanceForStage(currentStage);
+
+        // 플레이어 기준 랜덤 각도
+        float randomAngle = Random.Range(0f, 360f) * Mathf.Deg2Rad;
+        float x = playerObj.transform.position.x + Mathf.Cos(randomAngle) * distance;
+        float y = playerObj.transform.position.y + Mathf.Sin(randomAngle) * distance;
+
+        transform.position = new Vector3(x, y, transform.position.z);
+
+        Debug.Log($"[ExitDoor] Positioned at {transform.position} (Stage: {currentStage}, Distance: {distance})");
+    }
+
+    private float GetDistanceForStage(int stage)
+    {
+        switch (stage)
+        {
+            case 1: return stage1Distance;
+            case 2: return stage2Distance;
+            case 3: return stage3Distance;
+            default: return stage1Distance;
+        }
     }
 
     // ===== requirements / stage =====
@@ -220,5 +267,15 @@ public class ExitDoor : MonoBehaviour
             if (c.renderMode == RenderMode.WorldSpace)
                 return c.gameObject;
         return null;
+    }
+
+    // ===== Public API =====
+
+    /// <summary>
+    /// 외부에서 출구 위치를 다시 설정할 때 호출
+    /// </summary>
+    public void RepositionExit()
+    {
+        PositionExit();
     }
 }
