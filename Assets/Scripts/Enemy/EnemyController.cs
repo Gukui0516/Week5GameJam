@@ -130,10 +130,17 @@ public class EnemyController : MonoBehaviour
             RotateTowardsPlayer();
         }
 
-        // LightSeeker 타입이고 손전등 안에 있을 때 속도 증가 (반전 아닐때만)
-        if (enemyType == EnemyType.LightSeeker && isInLight && !isInverted)
+        // LightSeeker 속도 증가 로직 수정
+        if (enemyType == EnemyType.LightSeeker)
         {
-            UpdateLightSeekerSpeed();
+            // 반전 상태: 손전등 밖에서 움직이므로 손전등 밖에서 속도 증가
+            // 평소: 손전등 안에서 움직이므로 손전등 안에서 속도 증가
+            bool shouldIncreaseSpeed = isInverted ? !isInLight : isInLight;
+
+            if (shouldIncreaseSpeed)
+            {
+                UpdateLightSeekerSpeed();
+            }
         }
 
         // Enum 타입에 따라 움직임 결정
@@ -522,6 +529,34 @@ public class EnemyController : MonoBehaviour
 
     #region Flashlight Events
 
+
+    private void OnTriggerExit2D(Collider2D other)
+    {
+        if (other.gameObject.layer == LayerMask.NameToLayer("Flashlight"))
+        {
+            isInLight = false;
+            Debug.Log($"{gameObject.name} 손전등 벗어남!");
+
+            // LightSeeker의 경우 속도 초기화 - 반전 상태에 따라 다르게 처리
+            if (enemyType == EnemyType.LightSeeker)
+            {
+                // 평소: 손전등에서 나가면 속도 초기화 (손전등 안에서 움직이다가 나감)
+                // 반전: 손전등에 들어가면 멈추므로 초기화 불필요
+                if (!isInverted)
+                {
+                    currentSpeed = lightSeekerBaseSpeed;
+                    timeInLight = 0f;
+                }
+            }
+
+            // 손전등에서 벗어나면 원래 색상으로 복구 (useOutline이 true일 때만)
+            if (useOutline && enemyOutline != null)
+            {
+                UpdateOutlineColor();
+            }
+        }
+    }
+
     private void OnTriggerEnter2D(Collider2D other)
     {
         if (other.gameObject.layer == LayerMask.NameToLayer("Flashlight"))
@@ -533,28 +568,14 @@ public class EnemyController : MonoBehaviour
             if (isInverted)
             {
                 Die();
+                return;
             }
-        }
-    }
 
-    private void OnTriggerExit2D(Collider2D other)
-    {
-        if (other.gameObject.layer == LayerMask.NameToLayer("Flashlight"))
-        {
-            isInLight = false;
-            Debug.Log($"{gameObject.name} 손전등 벗어남!");
-
-            // LightSeeker의 경우 속도와 시간 초기화
-            if (enemyType == EnemyType.LightSeeker)
+            // 반전 상태에서 손전등에 들어가면 속도 초기화 (멈추므로)
+            if (enemyType == EnemyType.LightSeeker && isInverted)
             {
                 currentSpeed = lightSeekerBaseSpeed;
                 timeInLight = 0f;
-            }
-
-            // 손전등에서 벗어나면 원래 색상으로 복구 (useOutline이 true일 때만)
-            if (useOutline && enemyOutline != null)
-            {
-                UpdateOutlineColor();
             }
         }
     }
