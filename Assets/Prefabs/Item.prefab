@@ -172,9 +172,9 @@ MonoBehaviour:
   growDuration: 3
   holdDuration: 0.05
   fadeDuration: 0.25
-  travelDuration: 5
+  travelDuration: 4
   travelSpeed: 3
-  lengthRange: {x: 2, y: 5}
+  lengthRange: {x: 2, y: 4}
   thickness: 0.3
 --- !u!114 &779867169406584130
 MonoBehaviour:

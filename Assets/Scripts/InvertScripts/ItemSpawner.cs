@@ -4,6 +4,8 @@ using System.Collections;
 
 public class ItemSpawner : MonoBehaviour
 {
+    // 아이템 스포너
+
     #region Variables
 
     [Header("Spawn Settings")]
