@@ -36,16 +36,15 @@ public class ExitNavigate : MonoBehaviour
 
             // 거리
             float distance = dir.magnitude;
-            Debug.Log("거리" + distance);
             // 각도 (라디안 -> 도 단위 변환)
             float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
-
             transform.eulerAngles = new Vector3(0, 0, angle + 90f);
         }
         else
         {
             //uiImage.enabled = false;
         }
+        Debug.Log("화면 안에 있나?"+isOnScreen);
         if (isOnScreen) uiImage.enabled = false;
     }
     public void ExitScreenIn()
@@ -55,7 +54,7 @@ public class ExitNavigate : MonoBehaviour
         Vector2 screenPos = cam.WorldToScreenPoint(exit.transform.position);
 
         // 화면 앞에 있는지, 스크린 범위 안에 있는지 체크
-        bool isOnScreen = screenPos.x >= 0 && screenPos.x <= Screen.width &&
+        isOnScreen = screenPos.x >= 0 && screenPos.x <= Screen.width &&
                           screenPos.y >= 0 && screenPos.y <= Screen.height;
         if (isOnScreen)
         {
