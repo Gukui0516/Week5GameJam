@@ -3,10 +3,15 @@
 public class PlayerContact : MonoBehaviour
 {
     [SerializeField] CircleCollider2D checkRadius;
+    bool isContact = false;
     private void Awake()
     {
-        
+        isContact = false;
     }
+    private void Start()
+    {
+        isContact = false;
+    }   
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     public void CheckContact()//체크할 태그 이름
     {
@@ -15,13 +20,18 @@ public class PlayerContact : MonoBehaviour
         {
             if (hit.gameObject.CompareTag("Enemy"))
             {
-                GameManager.Instance.GameOver();
+                if (isContact == false)
+                {
+                    GameManager.Instance.GameOver();
+                    isContact = true;
+                }
+
             }
-            else if(hit.gameObject.CompareTag("Item"))
+            else if (hit.gameObject.CompareTag("Item"))
             {
-                Debug.Log("아이템 "+hit.name+" 획득");
+                Debug.Log("아이템 " + hit.name + " 획득");
                 Item item = hit.GetComponent<Item>();
-                if (item != null) 
+                if (item != null)
                 {
                     item.ActiveItem();
                 }
