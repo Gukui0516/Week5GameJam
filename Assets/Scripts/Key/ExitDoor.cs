@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
-using UnityEngine.SceneManagement;
 
 [RequireComponent(typeof(Collider2D))]
 public class ExitDoor : MonoBehaviour
@@ -22,19 +21,10 @@ public class ExitDoor : MonoBehaviour
     [SerializeField] private float stage2Distance = 120f;
     [SerializeField] private float stage3Distance = 160f;
 
-    [Header("Interaction")]
     [Header("Interact")]
     [SerializeField] private KeyCode interactKey = KeyCode.E;
     [Tooltip("플레이어가 범위에 있을 때 보여줄 상호작용 프롬프트")]
     [SerializeField] private GameObject InteractImageObj;
-
-    [Header("Next Scene Options")]
-    [Tooltip("GameManager의 AdvanceStageAndReload 사용 여부")]
-    [SerializeField] private bool useGameManagerToAdvance = false;
-    [Tooltip("이름이 설정되어 있으면 이 씬으로 이동")]
-    [SerializeField] private string nextSceneName = "";
-    [Tooltip("이 값이 0 이상이면 해당 빌드 인덱스로 이동")]
-    [SerializeField] private int nextSceneBuildIndex = -1;
 
     [Header("Events")]
     public UnityEvent onUnlocked;
@@ -120,122 +110,6 @@ public class ExitDoor : MonoBehaviour
         if (!playerInRange) return;
 
         if (Input.GetKeyDown(interactKey))
-            TryOpen();
-    }
-
-    private void TryOpen()
-    {
-        var activeReqs = GetActiveRequirements();
-
-        if (cachedCollector == null)
-        {
-            onRequirementNotMet?.Invoke();
-            UpdateUIContents(activeReqs);
-            return;
-        }
-
-        bool ok = consumeOnOpen
-            ? cachedCollector.TryUseRequirements(activeReqs)
-            : cachedCollector.CheckRequirements(activeReqs);
-
-        if (!ok)
-        {
-            onRequirementNotMet?.Invoke();
-            UpdateUIContents(activeReqs);
-            return;
-        }
-
-        HideUI();
-        onDoorOpened?.Invoke();
-
-        if (GameManager.Instance != null)
-            GameManager.Instance.AdvanceStageAndReload();
-        else
-            Debug.LogWarning("ExitDoor: GameManager 인스턴스 없음.");
-    }
-
-    // ===== Position =====
-
-    private void PositionExit()
-    {
-        GameObject playerObj = GameObject.FindGameObjectWithTag(playerTag);
-        if (playerObj == null)
-        {
-            Debug.LogWarning("ExitDoor: 플레이어를 찾을 수 없습니다.");
-            return;
-        }
-
-        int currentStage = readStageFromGameManager ? GetStageFromGameManagerSafe() : overrideStage;
-        float distance = GetDistanceForStage(currentStage);
-
-        // 플레이어 기준 랜덤 각도
-        float randomAngle = Random.Range(0f, 360f) * Mathf.Deg2Rad;
-        float x = playerObj.transform.position.x + Mathf.Cos(randomAngle) * distance;
-        float y = playerObj.transform.position.y + Mathf.Sin(randomAngle) * distance;
-
-        transform.position = new Vector3(x, y, transform.position.z);
-
-        Debug.Log($"[ExitDoor] Positioned at {transform.position} (Stage: {currentStage}, Distance: {distance})");
-    }
-
-    private float GetDistanceForStage(int stage)
-    {
-        switch (stage)
-        {
-            case 1: return stage1Distance;
-            case 2: return stage2Distance;
-            case 3: return stage3Distance;
-            default: return stage1Distance;
-        }
-    }
-
-    // ===== requirements / stage =====
-
-    private KeyRequirement[] GetActiveRequirements()
-    {
-        if (useStageTable && stageTable != null)
-        {
-            int stage = readStageFromGameManager ? GetStageFromGameManagerSafe() : overrideStage;
-            if (stage < 1) stage = 1;
-            return stageTable.GetForStage(stage);
-        }
-        return requirements ?? System.Array.Empty<KeyRequirement>();
-    }
-
-    private int GetStageFromGameManagerSafe()
-    {
-        var gm = GameManager.Instance;
-        if (gm == null) return 1;
-
-        // 1) 널리 쓰일 법한 프로퍼티부터
-        var props = new[] { "CurrentStage", "Stage", "StageIndex", "Level" };
-        foreach (var p in props)
-        {
-            var pi = gm.GetType().GetProperty(p, BindingFlags.Instance | BindingFlags.Public);
-            if (pi != null && pi.PropertyType == typeof(int))
-                return (int)pi.GetValue(gm, null);
-        }
-        // 2) 필드
-        var fields = new[] { "currentStage", "stage", "stageIndex", "level" };
-        foreach (var f in fields)
-        {
-            var fi = gm.GetType().GetField(f, BindingFlags.Instance | BindingFlags.Public);
-            if (fi != null && fi.FieldType == typeof(int))
-                return (int)fi.GetValue(gm);
-        }
-        // 3) 못 찾으면 1
-        return 1;
-    }
-
-    // ===== UI =====
-
-    private void ShowUI()
-    {
-        if (worldspaceUIRoot != null && !worldspaceUIRoot.activeSelf)
-            worldspaceUIRoot.SetActive(true);
-    }
-
-    private void HideUI()
         {
             if (!unlocked)
             {
@@ -264,6 +138,41 @@ public class ExitDoor : MonoBehaviour
         }
     }
 
+    // ===== Position =====
+
+    private void PositionExit()
+    {
+        GameObject playerObj = GameObject.FindGameObjectWithTag(playerTag);
+        if (playerObj == null)
+        {
+            Debug.LogWarning("ExitDoor: 플레이어를 찾을 수 없습니다.");
+            return;
+        }
+
+        int currentStage = DetermineStage();
+        float distance = GetDistanceForStage(currentStage);
+
+        // 플레이어 기준 랜덤 각도
+        float randomAngle = Random.Range(0f, 360f) * Mathf.Deg2Rad;
+        float x = playerObj.transform.position.x + Mathf.Cos(randomAngle) * distance;
+        float y = playerObj.transform.position.y + Mathf.Sin(randomAngle) * distance;
+
+        transform.position = new Vector3(x, y, transform.position.z);
+
+        Debug.Log($"[ExitDoor] Positioned at {transform.position} (Stage: {currentStage}, Distance: {distance})");
+    }
+
+    private float GetDistanceForStage(int stage)
+    {
+        switch (stage)
+        {
+            case 1: return stage1Distance;
+            case 2: return stage2Distance;
+            case 3: return stage3Distance;
+            default: return stage3Distance; // 3스테이지 이후는 가장 멀리
+        }
+    }
+
     private void ProceedToNextStageOrScene()
     {
         if (!enabled) return;
@@ -272,9 +181,11 @@ public class ExitDoor : MonoBehaviour
         if (GameManager.Instance != null)
         {
             GameManager.Instance.AdvanceStageAndReload();
-            
         }
-        
+        else
+        {
+            Debug.LogWarning("ExitDoor: GameManager 인스턴스가 없습니다.");
+        }
     }
 
     private void OnTriggerEnter2D(Collider2D other)
