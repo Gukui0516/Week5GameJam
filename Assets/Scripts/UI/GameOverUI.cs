@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 public class GameOverUI : MonoBehaviour
 {
@@ -8,9 +8,11 @@ public class GameOverUI : MonoBehaviour
 
     void Awake()
     {
+        GameManager.Instance.gameOverUI = this;
         restartButton.onClick.AddListener(OnRestartClicked);
         quitButton.onClick.AddListener(OnQuitClicked);
         Hide(); // 시작 시 숨김
+        
     }
 
     public void Show()

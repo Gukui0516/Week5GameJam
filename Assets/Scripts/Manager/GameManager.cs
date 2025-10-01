@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 public enum GameState { Boot, Playing, Paused, GameOver }
 
@@ -26,7 +26,7 @@ public class GameManager : MonoBehaviour
     public bool IsPaused => current == GameState.Paused;
     private SceneDirector sceneDirector;
     [Header("UI 참조")]
-    [SerializeField] private GameOverUI gameOverUI;
+    public GameOverUI gameOverUI;
 
 
     void Awake()
@@ -53,6 +53,7 @@ public class GameManager : MonoBehaviour
         {
             StartNewGame();
         }
+        Debug.Log("st");
     }
 
     // ======= 공개 API =======
@@ -64,6 +65,7 @@ public class GameManager : MonoBehaviour
         sceneDirector.LoadGame();
         current = GameState.Playing;
         Resume();
+        Debug.Log("StartNewGame");
     }
 
     public void GoTitle()
