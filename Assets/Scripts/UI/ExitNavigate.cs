@@ -42,7 +42,7 @@ public class ExitNavigate : MonoBehaviour
         }
         else
         {
-            //uiImage.enabled = false;
+            uiImage.enabled = false;
         }
         Debug.Log("화면 안에 있나?"+isOnScreen);
         if (isOnScreen) uiImage.enabled = false;
