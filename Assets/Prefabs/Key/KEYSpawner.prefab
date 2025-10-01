@@ -1,0 +1,60 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1922449813341543732
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1108217274143018791}
+  - component: {fileID: 5343621676149680982}
+  m_Layer: 0
+  m_Name: KEYSpawner
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1108217274143018791
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1922449813341543732}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5343621676149680982
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1922449813341543732}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 237f2c4ba101e324b8c269ee0c7351e3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  keyPrefabs:
+  - {fileID: 2954322133428292405, guid: a98ff8b622ee3f044802862a9415e613, type: 3}
+  - {fileID: 5936295845991729708, guid: ce69354c363bf244baf65db7fce4fda9, type: 3}
+  - {fileID: 2977184127237726668, guid: d0fb3da994d501443954927e0c4d439b, type: 3}
+  - {fileID: 1370417202737147512, guid: 0493c81ff619bca4a96d9c04a3fc1e0c, type: 3}
+  spawnInterval: 5
+  maxKeys: 10
+  spawnDistance: 12
+  outsideCameraOnly: 1
+  despawnDistance: 25
+  optionalMaxLifetime: -1
+  defaultPoolCapacity: 8
+  maxPoolSize: 24
+  playerTag: Player

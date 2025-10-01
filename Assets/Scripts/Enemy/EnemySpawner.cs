@@ -1,25 +1,46 @@
 using UnityEngine;
 using UnityEngine.Pool;
 using System.Collections;
+using System.Collections.Generic;
 
 public class EnemySpawner : MonoBehaviour
 {
+    #region Enemy Type Definition
+
+    [System.Serializable]
+    public class EnemySpawnData
+    {
+        [Header("Basic Info")]
+        public string enemyName;
+        public GameObject enemyPrefab;
+
+        [Header("Spawn Settings")]
+        public float spawnInterval = 2f;      // 각자의 스폰 간격
+        public int maxCount = 5;              // 이 타입의 최대 동시 생성 수
+
+        [Header("Pool Settings")]
+        public int poolCapacity = 5;
+        public int poolMaxSize = 10;
+
+        [HideInInspector] public ObjectPool<GameObject> pool;
+        [HideInInspector] public int currentCount = 0;
+        [HideInInspector] public Coroutine spawnCoroutine;
+    }
+
+    #endregion
+
     #region Variables
 
     [Header("Spawn Settings")]
-    [SerializeField] private GameObject enemyPrefab;
-    [SerializeField] private float spawnInterval = 2f;
-    [SerializeField] private int maxEnemies = 10;
+    [SerializeField] private List<EnemySpawnData> enemyTypes = new List<EnemySpawnData>();
     [SerializeField] private float spawnDistance = 15f;
-
-    [Header("Pool Settings")]
-    [SerializeField] private int defaultPoolCapacity = 10;
-    [SerializeField] private int maxPoolSize = 20;
 
     private Camera mainCamera;
     private Transform player;
-    private ObjectPool<GameObject> enemyPool;
-    private int currentEnemyCount = 0;
+    private int totalEnemyCount = 0;
+
+    // 인스턴스 → 어떤 EnemySpawnData에 속하는지 추적
+    private Dictionary<GameObject, EnemySpawnData> instanceToData = new Dictionary<GameObject, EnemySpawnData>();
 
     public static EnemySpawner Instance { get; private set; }
 
@@ -29,7 +50,6 @@ public class EnemySpawner : MonoBehaviour
 
     void Awake()
     {
-        // 싱글톤 설정
         if (Instance == null)
         {
             Instance = this;
@@ -40,52 +60,76 @@ public class EnemySpawner : MonoBehaviour
             return;
         }
 
-        // ObjectPool 초기화
-        enemyPool = new ObjectPool<GameObject>(
-            createFunc: CreateEnemy,
-            actionOnGet: OnGetEnemy,
-            actionOnRelease: OnReleaseEnemy,
-            actionOnDestroy: OnDestroyEnemy,
-            collectionCheck: true,
-            defaultCapacity: defaultPoolCapacity,
-            maxSize: maxPoolSize
-        );
+        InitializePools();
     }
 
     void Start()
     {
         mainCamera = Camera.main;
-        // TODO: 플레이어 구현 후 제대로 참조
-        player = GameObject.FindGameObjectWithTag("Player").transform;
+        player = GameObject.FindGameObjectWithTag("Player")?.transform;
 
-        StartCoroutine(SpawnCoroutine());
+        StartAllSpawners();
+    }
+
+    void OnDestroy()
+    {
+        StopAllSpawners();
+    }
+
+    #endregion
+
+    #region Pool Initialization
+
+    void InitializePools()
+    {
+        foreach (var enemyData in enemyTypes)
+        {
+            // 각 적 타입별로 독립적인 풀 생성
+            enemyData.pool = new ObjectPool<GameObject>(
+                createFunc: () => CreateEnemy(enemyData),
+                actionOnGet: (enemy) => OnGetEnemy(enemy, enemyData),
+                actionOnRelease: (enemy) => OnReleaseEnemy(enemy, enemyData),
+                actionOnDestroy: (enemy) => OnDestroyEnemy(enemy, enemyData),
+                collectionCheck: true,
+                defaultCapacity: enemyData.poolCapacity,
+                maxSize: enemyData.poolMaxSize
+            );
+        }
     }
 
     #endregion
 
     #region Object Pool Callbacks
 
-    GameObject CreateEnemy()
+    GameObject CreateEnemy(EnemySpawnData data)
     {
-        GameObject enemy = Instantiate(enemyPrefab);
+        GameObject enemy = Instantiate(data.enemyPrefab);
+        enemy.name = $"{data.enemyName}_Pooled";
+
+        // 어떤 데이터에 속하는지 기록
+        instanceToData[enemy] = data;
+
         enemy.SetActive(false);
         return enemy;
     }
 
-    void OnGetEnemy(GameObject enemy)
+    void OnGetEnemy(GameObject enemy, EnemySpawnData data)
     {
         enemy.SetActive(true);
-        currentEnemyCount++;
+        data.currentCount++;
+        totalEnemyCount++;
     }
 
-    void OnReleaseEnemy(GameObject enemy)
+    void OnReleaseEnemy(GameObject enemy, EnemySpawnData data)
     {
         enemy.SetActive(false);
-        currentEnemyCount--;
+        data.currentCount--;
+        totalEnemyCount--;
     }
 
-    void OnDestroyEnemy(GameObject enemy)
+    void OnDestroyEnemy(GameObject enemy, EnemySpawnData data)
     {
+        instanceToData.Remove(enemy);
         Destroy(enemy);
     }
 
@@ -93,33 +137,61 @@ public class EnemySpawner : MonoBehaviour
 
     #region Spawn Logic
 
-    IEnumerator SpawnCoroutine()
+    void StartAllSpawners()
+    {
+        // 각 적 타입마다 독립적인 코루틴 시작
+        foreach (var enemyData in enemyTypes)
+        {
+            enemyData.spawnCoroutine = StartCoroutine(SpawnCoroutine(enemyData));
+        }
+    }
+
+    void StopAllSpawners()
+    {
+        // 모든 스폰 코루틴 중지
+        foreach (var enemyData in enemyTypes)
+        {
+            if (enemyData.spawnCoroutine != null)
+            {
+                StopCoroutine(enemyData.spawnCoroutine);
+                enemyData.spawnCoroutine = null;
+            }
+        }
+    }
+
+    IEnumerator SpawnCoroutine(EnemySpawnData data)
     {
         while (true)
         {
-            yield return new WaitForSeconds(spawnInterval);
+            yield return new WaitForSeconds(data.spawnInterval);
 
-            if (currentEnemyCount < maxEnemies)
+            // 이 타입의 현재 수가 최대치 미만일 때만 스폰
+            if (data.currentCount < data.maxCount)
             {
                 Vector2 spawnPosition = GetRandomSpawnPosition();
 
                 if (IsOutsideCameraView(spawnPosition))
                 {
-                    SpawnEnemy(spawnPosition);
+                    SpawnEnemy(data, spawnPosition);
                 }
             }
         }
     }
 
+    void SpawnEnemy(EnemySpawnData data, Vector2 position)
+    {
+        if (data.pool != null)
+        {
+            GameObject enemy = data.pool.Get();
+            enemy.transform.position = position;
+            enemy.transform.rotation = Quaternion.identity;
+        }
+    }
+
     Vector2 GetRandomSpawnPosition()
     {
-        // 카메라 중심 위치
         Vector2 center = mainCamera.transform.position;
-
-        // 원 위의 랜덤 각도 (0 ~ 360도)
         float randomAngle = Random.Range(0f, 360f) * Mathf.Deg2Rad;
-
-        // 원형으로 spawnDistance 떨어진 위치 계산
         float x = center.x + Mathf.Cos(randomAngle) * spawnDistance;
         float y = center.y + Mathf.Sin(randomAngle) * spawnDistance;
 
@@ -129,27 +201,53 @@ public class EnemySpawner : MonoBehaviour
     bool IsOutsideCameraView(Vector2 position)
     {
         Vector3 viewportPoint = mainCamera.WorldToViewportPoint(position);
-
-        // 뷰포트 좌표: (0,0) = 왼쪽 하단, (1,1) = 오른쪽 상단
         return viewportPoint.x < 0 || viewportPoint.x > 1 ||
                viewportPoint.y < 0 || viewportPoint.y > 1;
-    }
-
-    void SpawnEnemy(Vector2 position)
-    {
-        GameObject enemy = enemyPool.Get();
-        enemy.transform.position = position;
-        enemy.transform.rotation = Quaternion.identity;
     }
 
     #endregion
 
     #region Public Methods
 
-    //Enemy에서 Die() 함수로 쓰세요
     public void ReturnEnemy(GameObject enemy)
     {
-        enemyPool.Release(enemy);
+        // 어떤 풀에 속하는지 찾아서 반납
+        if (instanceToData.TryGetValue(enemy, out EnemySpawnData data))
+        {
+            data.pool.Release(enemy);
+        }
+    }
+
+    // 특정 타입의 스폰 일시정지/재개
+    public void PauseSpawner(string enemyName)
+    {
+        var data = enemyTypes.Find(e => e.enemyName == enemyName);
+        if (data != null && data.spawnCoroutine != null)
+        {
+            StopCoroutine(data.spawnCoroutine);
+            data.spawnCoroutine = null;
+        }
+    }
+
+    public void ResumeSpawner(string enemyName)
+    {
+        var data = enemyTypes.Find(e => e.enemyName == enemyName);
+        if (data != null && data.spawnCoroutine == null)
+        {
+            data.spawnCoroutine = StartCoroutine(SpawnCoroutine(data));
+        }
+    }
+
+    // 디버그용: 각 타입별 현재 스폰된 수 확인
+    public void PrintPoolStatus()
+    {
+        Debug.Log("=== Pool Status ===");
+        foreach (var data in enemyTypes)
+        {
+            Debug.Log($"{data.enemyName}: {data.currentCount}/{data.maxCount} active " +
+                      $"(Interval: {data.spawnInterval}s, Pool: {data.poolCapacity}/{data.poolMaxSize})");
+        }
+        Debug.Log($"Total Active: {totalEnemyCount}");
     }
 
     #endregion
