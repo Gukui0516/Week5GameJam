@@ -22,8 +22,8 @@ public class PlayerContact : MonoBehaviour
             {
                 if (isContact == false)
                 {
-                    //GameManager.Instance.GameOver();
-                    //isContact = true;
+                    GameManager.Instance.GameOver();
+                    isContact = true;
                 }
 
             }
