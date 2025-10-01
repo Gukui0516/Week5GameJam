@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 6420623108000606234}
   - component: {fileID: 50324411898153865}
   m_Layer: 5
-  m_Name: KeyCount
+  m_Name: Count
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -148,7 +148,7 @@ GameObject:
   - component: {fileID: 4451894948005072702}
   - component: {fileID: 8975273386131727999}
   m_Layer: 5
-  m_Name: KeyName
+  m_Name: Title
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -284,7 +284,7 @@ GameObject:
   - component: {fileID: 1834848247821844139}
   - component: {fileID: 1799643046206658293}
   m_Layer: 5
-  m_Name: KeyName
+  m_Name: Title
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -447,7 +447,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: -50, y: -40}
   m_SizeDelta: {x: 500, y: 220}
   m_Pivot: {x: 1, y: 1}
 --- !u!222 &8428916264022691379
@@ -526,7 +526,7 @@ GameObject:
   - component: {fileID: 5541750232539813549}
   - component: {fileID: 8239041987122012024}
   m_Layer: 5
-  m_Name: KeyCount
+  m_Name: Count
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -662,7 +662,7 @@ GameObject:
   - component: {fileID: 8794367388547667952}
   - component: {fileID: 7720562570082179750}
   m_Layer: 5
-  m_Name: KeyName
+  m_Name: Title
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -798,7 +798,7 @@ GameObject:
   - component: {fileID: 3826812652297953491}
   - component: {fileID: 1663787540875046747}
   m_Layer: 5
-  m_Name: KeyName
+  m_Name: Title
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1015,6 +1015,7 @@ MonoBehaviour:
   keyKind: 3
   icon: {fileID: 1313158064417381051}
   countText: {fileID: 50324411898153865}
+  titleText: {fileID: 8975273386131727999}
   inactiveAlpha: 0
   activeAlpha: 1
   fadeDuration: 0.12
@@ -1112,6 +1113,7 @@ MonoBehaviour:
   keyKind: 0
   icon: {fileID: 3462346994137012062}
   countText: {fileID: 8239041987122012024}
+  titleText: {fileID: 7720562570082179750}
   inactiveAlpha: 0
   activeAlpha: 1
   fadeDuration: 0.12
@@ -1209,6 +1211,7 @@ MonoBehaviour:
   keyKind: 2
   icon: {fileID: 9036872014414385690}
   countText: {fileID: 7242880521216241478}
+  titleText: {fileID: 1799643046206658293}
   inactiveAlpha: 0
   activeAlpha: 1
   fadeDuration: 0.12
@@ -1348,11 +1351,11 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 1886706391552022547}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
+  m_AnchorMin: {x: 1, y: 1}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 200, y: 50}
-  m_Pivot: {x: 1, y: 0}
+  m_Pivot: {x: 1, y: 1}
 --- !u!222 &2998820012716772565
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1464,7 +1467,7 @@ GameObject:
   - component: {fileID: 3594990064375501732}
   - component: {fileID: 6804195569072912758}
   m_Layer: 5
-  m_Name: KeyCount
+  m_Name: Count
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1600,7 +1603,7 @@ GameObject:
   - component: {fileID: 2911653644274814063}
   - component: {fileID: 7242880521216241478}
   m_Layer: 5
-  m_Name: KeyCount
+  m_Name: Count
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1817,6 +1820,7 @@ MonoBehaviour:
   keyKind: 1
   icon: {fileID: 6076827502187896916}
   countText: {fileID: 6804195569072912758}
+  titleText: {fileID: 1663787540875046747}
   inactiveAlpha: 0
   activeAlpha: 1
   fadeDuration: 0.12
