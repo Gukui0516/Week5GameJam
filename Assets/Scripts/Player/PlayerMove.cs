@@ -3,13 +3,18 @@ using UnityEngine.InputSystem;
 
 public class PlayerController : MonoBehaviour
 {
-    [SerializeField] private float moveSpeed = 5f;
-
+    [SerializeField] private float moveDefalutSpeed = 5f;
+    [SerializeField] private float moveLightSpeed = 5f;
+    [SerializeField] WorldStateManager worldStateManager;
     private Vector2 moveInput;
     private InputSystem_Actions controls;  // 자동 생성된 클래스
 
     private void Awake()
     {
+        if (worldStateManager == null)
+        {
+            worldStateManager = FindFirstObjectByType<WorldStateManager>();
+        }
         controls = new InputSystem_Actions();
     }
     private void OnEnable()//플레이어 활성화 시
@@ -30,8 +35,17 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
-        // Vector2 이동
+        float moveSpeed;
+        if (worldStateManager.IsInverted)
+        {
+            moveSpeed = moveLightSpeed;
+        }
+        else 
+        {
+            moveSpeed = moveDefalutSpeed;
+        }
         Vector2 move = moveInput * moveSpeed * Time.deltaTime;
         transform.position += new Vector3(move.x, move.y, 0f);
+        // Vector2 이동
     }
 }

@@ -169,7 +169,7 @@ MonoBehaviour:
   color: {r: 1, g: 1, b: 1, a: 1}
   sortingLayerName: Default
   orderInLayer: 0
-  intervalSeconds: 1
+  intervalSeconds: 0.5
   growDuration: 0.1
   holdDuration: 0
   fadeDuration: 0.1
