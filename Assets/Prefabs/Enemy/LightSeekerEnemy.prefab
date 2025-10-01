@@ -134,7 +134,7 @@ GameObject:
   - component: {fileID: 1374186192906355288}
   - component: {fileID: 824073078448642078}
   - component: {fileID: 5101757877946332033}
-  m_Layer: 6
+  m_Layer: 0
   m_Name: LightSeekerEnemy
   m_TagString: Enemy
   m_Icon: {fileID: 0}
