@@ -39,6 +39,11 @@ public class EnemyController : MonoBehaviour
     [Header("Eyes Settings")]
     [SerializeField] private GameObject eyesObject; // Eyes 게임오브젝트 참조
 
+    [Header("Rotation Settings")]
+    [SerializeField] private bool enableRotation = true; // 회전 활성화 여부
+    [SerializeField] private float rotationSpeed = 10f; // 회전 속도 (부드러운 회전을 원하면 낮은 값, 즉시 회전은 높은 값)
+    [SerializeField] private float rotationOffset = 180f; // 스프라이트가 아래를 보고 있으면 180
+
     private Transform player;
     private bool isInLight = false; //손전등 빛에 있을 때 정지
     private bool isInverted = false; //반전 상태 추적
@@ -114,6 +119,12 @@ public class EnemyController : MonoBehaviour
 
         // 거리에 따라 Eyes 표시 여부 결정
         UpdateVisibility();
+
+        // 손전등 안에 있지 않을 때만 플레이어를 바라보도록 회전
+        if (enableRotation && player != null && !isInLight)
+        {
+            RotateTowardsPlayer();
+        }
 
         if (IsStoppedByInversion()) return;
 
@@ -233,7 +244,7 @@ public class EnemyController : MonoBehaviour
 
     #endregion
 
-    #region Movement
+    #region Movement & Rotation
 
     // Enum 타입에 따라 움직여야 하는지 판단
     private bool ShouldMove()
@@ -258,6 +269,8 @@ public class EnemyController : MonoBehaviour
 
     private void MoveTowardsPlayer() //플레이어 향해 이동
     {
+        if (player == null) return;
+
         float distance = Vector2.Distance(transform.position, player.position);
 
         if (distance > stoppingDistance)
@@ -265,6 +278,28 @@ public class EnemyController : MonoBehaviour
             Vector2 direction = (player.position - transform.position).normalized;
             transform.position += (Vector3)(direction * currentSpeed * Time.deltaTime);
         }
+    }
+
+    // 플레이어 방향으로 회전 (움직임과 별개로 항상 실행)
+    private void RotateTowardsPlayer()
+    {
+        // 플레이어 방향 벡터 계산
+        Vector2 direction = (player.position - transform.position).normalized;
+
+        // direction 벡터로부터 각도 계산
+        float targetAngle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+
+        // 스프라이트의 기본 방향 오프셋 적용 (아래를 보고 있으므로 90도 추가)
+        targetAngle -= rotationOffset;
+
+        // 현재 회전값
+        float currentAngle = transform.eulerAngles.z;
+
+        // 부드러운 회전
+        float smoothAngle = Mathf.LerpAngle(currentAngle, targetAngle, rotationSpeed * Time.deltaTime);
+
+        // 회전 적용 (Z축만 회전)
+        transform.rotation = Quaternion.Euler(0, 0, smoothAngle);
     }
 
     // LightSeeker의 속도를 손전등에 있는 시간에 따라 증가
@@ -320,14 +355,9 @@ public class EnemyController : MonoBehaviour
     private void UpdateOutlineColor()
     {
         if (enemyOutline == null) return;
-        else if (isInverted)
-        {
-            enemyOutline.SetOutlineColor(Color.white);
-        }
-        else
-        {
-            enemyOutline.SetOutlineColor(Color.black);
-        }
+
+        Color outlineColor = isInverted ? Color.white : Color.black;
+        enemyOutline.SetOutlineColor(outlineColor);
     }
 
     #endregion

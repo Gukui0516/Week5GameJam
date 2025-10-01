@@ -302,6 +302,9 @@ MonoBehaviour:
   worldStateManager: {fileID: 0}
   enemyOutline: {fileID: 0}
   eyesObject: {fileID: 0}
+  enableRotation: 1
+  rotationSpeed: 10
+  rotationOffset: 270
 --- !u!114 &5101757877946332033
 MonoBehaviour:
   m_ObjectHideFlags: 0
