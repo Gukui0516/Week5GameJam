@@ -16,6 +16,10 @@ public class ItemSpawner : MonoBehaviour
     [SerializeField] private int defaultPoolCapacity = 10;
     [SerializeField] private int maxPoolSize = 20;
 
+    [Header("Despawn Settings")]
+    [SerializeField] private float despawnDistance = 25f;   // 플레이어와 이 거리 이상 벌어지면 반환
+    [SerializeField] private float optionalMaxLifetime = -1f; // 5f 등으로 설정하면 X초 후 자동 반환, 사용 안 하면 -1
+
     private Camera mainCamera;
     private Transform player;
     private ObjectPool<GameObject> itemPool;
@@ -29,18 +33,9 @@ public class ItemSpawner : MonoBehaviour
 
     void Awake()
     {
-        // 싱글톤 설정
-        if (Instance == null)
-        {
-            Instance = this;
-        }
-        else
-        {
-            Destroy(gameObject);
-            return;
-        }
+        if (Instance == null) Instance = this;
+        else { Destroy(gameObject); return; }
 
-        // ObjectPool 초기화
         itemPool = new ObjectPool<GameObject>(
             createFunc: CreateItem,
             actionOnGet: OnGetItem,
@@ -55,9 +50,7 @@ public class ItemSpawner : MonoBehaviour
     void Start()
     {
         mainCamera = Camera.main;
-        // TODO: 플레이어 구현 후 제대로 참조
         player = GameObject.FindGameObjectWithTag("Player").transform;
-
         StartCoroutine(SpawnCoroutine());
     }
 
@@ -69,6 +62,11 @@ public class ItemSpawner : MonoBehaviour
     {
         GameObject item = Instantiate(itemPrefab);
         item.SetActive(false);
+
+        // 아이템에 PooledItem 컴포넌트 보장
+        if (!item.TryGetComponent<PooledItem>(out _))
+            item.AddComponent<PooledItem>();
+
         return item;
     }
 
@@ -76,17 +74,33 @@ public class ItemSpawner : MonoBehaviour
     {
         item.SetActive(true);
         currentItemCount++;
+
+        // 스폰될 때마다 거리/수명 체크 세팅
+        var pooled = item.GetComponent<PooledItem>();
+        pooled.Setup(
+            player,
+            despawnDistance,
+            ReleaseItem,            // 아이템이 직접 풀로 돌아가도록 콜백 전달
+            optionalMaxLifetime     // -1이면 끔
+        );
     }
 
     void OnReleaseItem(GameObject item)
     {
         item.SetActive(false);
-        currentItemCount--;
+        currentItemCount = Mathf.Max(0, currentItemCount - 1);
     }
 
     void OnDestroyItem(GameObject item)
     {
         Destroy(item);
+    }
+
+    private void ReleaseItem(GameObject go)
+    {
+        // 아이템 쪽에서 호출되는 반환 콜백
+        if (go != null)
+            itemPool.Release(go);
     }
 
     #endregion
@@ -113,24 +127,16 @@ public class ItemSpawner : MonoBehaviour
 
     Vector2 GetRandomSpawnPosition()
     {
-        // 카메라 중심 위치
         Vector2 center = mainCamera.transform.position;
-
-        // 원 위의 랜덤 각도 (0 ~ 360도)
         float randomAngle = Random.Range(0f, 360f) * Mathf.Deg2Rad;
-
-        // 원형으로 spawnDistance 떨어진 위치 계산
         float x = center.x + Mathf.Cos(randomAngle) * spawnDistance;
         float y = center.y + Mathf.Sin(randomAngle) * spawnDistance;
-
         return new Vector2(x, y);
     }
 
     bool IsOutsideCameraView(Vector2 position)
     {
         Vector3 viewportPoint = mainCamera.WorldToViewportPoint(position);
-
-        // 뷰포트 좌표: (0,0) = 왼쪽 하단, (1,1) = 오른쪽 상단
         return viewportPoint.x < 0 || viewportPoint.x > 1 ||
                viewportPoint.y < 0 || viewportPoint.y > 1;
     }
@@ -141,10 +147,6 @@ public class ItemSpawner : MonoBehaviour
         item.transform.position = position;
         item.transform.rotation = Quaternion.identity;
     }
-
-    #endregion
-
-    #region Public Methods
 
     #endregion
 }
