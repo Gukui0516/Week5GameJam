@@ -120,8 +120,8 @@ public class EnemyController : MonoBehaviour
         // 거리에 따라 Eyes 표시 여부 결정
         UpdateVisibility();
 
-        // 손전등 안에 있지 않을 때만 플레이어를 바라보도록 회전
-        if (enableRotation && player != null && !isInLight)
+        // 회전 조건 수정: LightSeeker는 손전등 안에서도 회전
+        if (enableRotation && player != null && ShouldRotate())
         {
             RotateTowardsPlayer();
         }
@@ -156,11 +156,11 @@ public class EnemyController : MonoBehaviour
             // 현재 반전 상태에 맞는 색상 설정
             if (isInverted)
             {
-                enemyOutline.SetOutlineColor(Color.white);
+                enemyOutline.SetOutlineColor(Color.black);
             }
             else
             {
-                enemyOutline.SetOutlineColor(Color.black); //기본색상 설정
+                enemyOutline.SetOutlineColor(isInverted ? Color.white : Color.black);
             }
         }
         else if (enemyOutline != null)
@@ -262,12 +262,29 @@ public class EnemyController : MonoBehaviour
         }
     }
 
-    private bool IsStoppedByInversion() //배경 바뀌면 멈춤
+    // LightSeeker는 반전 상태에서도 멈추지 않음
+    private bool IsStoppedByInversion()
     {
+        if (enemyType == EnemyType.LightSeeker)
+        {
+            return false; // LightSeeker는 반전 상태 무시
+        }
+
         return worldStateManager != null && worldStateManager.IsInverted;
     }
 
-    private void MoveTowardsPlayer() //플레이어 향해 이동
+    // LightSeeker는 손전등 안에서도 회전
+    private bool ShouldRotate()
+    {
+        if (enemyType == EnemyType.LightSeeker)
+        {
+            return true; // 항상 회전
+        }
+
+        return !isInLight; // Normal은 손전등 밖에서만 회전
+    }
+
+    private void MoveTowardsPlayer()
     {
         if (player == null) return;
 
@@ -312,6 +329,18 @@ public class EnemyController : MonoBehaviour
         currentSpeed = Mathf.Min(lightSeekerBaseSpeed + speedBonus, maxSpeed);
     }
 
+    // 지수적 증가 버전
+    //     private void UpdateLightSeekerSpeed()
+    //     {
+    //         timeInLight += Time.deltaTime;
+
+    // 지수적 증가: baseSpeed * (multiplier ^ 경과 인터벌 수)
+    //         int intervals = Mathf.FloorToInt(timeInLight / speedIncreaseInterval);
+    //         float speedMultiplier = Mathf.Pow(speedIncreaseRate, intervals);
+
+    //         currentSpeed = Mathf.Min(lightSeekerBaseSpeed * speedMultiplier, maxSpeed);
+    //     }
+
     #endregion
 
     #region Visibility Management
@@ -341,7 +370,7 @@ public class EnemyController : MonoBehaviour
         }
         else
         {
-            // Normal: 거리 안에 있을 때만 켜짐
+            // Normal: 거리 안에 있을 때만
             shouldBeActive = distance <= eyesVisibleDistance;
         }
 
@@ -356,8 +385,16 @@ public class EnemyController : MonoBehaviour
     {
         if (enemyOutline == null) return;
 
-        Color outlineColor = isInverted ? Color.white : Color.black;
-        enemyOutline.SetOutlineColor(outlineColor);
+        // LightSeeker는 항상 검은색, Normal만 반전에 영향받음
+        if (enemyType == EnemyType.LightSeeker)
+        {
+            enemyOutline.SetOutlineColor(Color.black);
+        }
+        else
+        {
+            Color outlineColor = isInverted ? Color.white : Color.black;
+            enemyOutline.SetOutlineColor(outlineColor);
+        }
     }
 
     #endregion
@@ -369,8 +406,8 @@ public class EnemyController : MonoBehaviour
         isInverted = inverted;
         Debug.Log($"{gameObject.name} 반전 상태: {inverted}");
 
-        // 반전 상태에 따라 아웃라인 색상 변경 (useOutline이 true일 때만)
-        if (useOutline && enemyOutline != null)
+        // LightSeeker는 색상 변경 없음, Normal만 변경
+        if (useOutline && enemyOutline != null && enemyType != EnemyType.LightSeeker)
         {
             UpdateOutlineColor();
         }
@@ -388,12 +425,20 @@ public class EnemyController : MonoBehaviour
             Debug.Log($"{gameObject.name} 손전등 진입!");
 
             // 손전등에 비춰지면 노란색 아웃라인 (useOutline이 true일 때만)
-            if (useOutline && enemyOutline != null)
-            {
-                enemyOutline.SetOutlineColor(Color.black);
-            }
+            // if (useOutline && enemyOutline != null)
+            // {
+            //     if (enemyType == EnemyType.LightSeeker)
+            //     {
+            //         enemyOutline.SetOutlineColor(Color.black);
+            //     }
+            //     else
+            //     {
+            //         enemyOutline.SetOutlineColor(Color.black);
+            //     }
+            // }
 
-            if (isInverted)
+            // Normal만 반전 상태에서 죽음
+            if (isInverted && enemyType != EnemyType.LightSeeker)
             {
                 Die();
             }
