@@ -5,12 +5,13 @@ public enum GameState { Boot, Playing, Paused, GameOver }
 [DefaultExecutionOrder(-1000)]
 public class GameManager : MonoBehaviour
 {
+
     public static GameManager Instance { get; private set; }
 
     [Header("상태")]
     [SerializeField] private GameState current = GameState.Boot;
     public GameState Current => current;
-    
+
 
     [Header("설정")]
     [SerializeField, Tooltip("게임 시작 시 타이틀로 진입할지")]
@@ -24,6 +25,9 @@ public class GameManager : MonoBehaviour
 
     public bool IsPaused => current == GameState.Paused;
     private SceneDirector sceneDirector;
+    [Header("UI 참조")]
+    [SerializeField] private GameOverUI gameOverUI;
+
 
     void Awake()
     {
@@ -38,7 +42,7 @@ public class GameManager : MonoBehaviour
         if (sceneDirector == null)
             sceneDirector = GetComponent<SceneDirector>();
     }
-    
+
     void Start()
     {
         if (enterTitleOnBoot)
@@ -106,14 +110,21 @@ public class GameManager : MonoBehaviour
     public void GameOver()
     {
         current = GameState.GameOver;
-        Time.timeScale = 0f; // 연출에 맞게 조절
+        Time.timeScale = 0f;
 
-        // 게임오버 UI 띄울 곳
-
-        // 추가할거있으면 이후에 
-
+        if (gameOverUI != null)
+            gameOverUI.Show();
     }
 
+    public void QuitGame()
+    {
+        // 게임 종료
+        #if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+        #else
+            Application.Quit();
+        #endif
+    }
     /*
     public class DifficultyScaler : MonoBehaviour
     {
