@@ -115,7 +115,7 @@ public class EnemySpawner : MonoBehaviour
 
     void OnGetEnemy(GameObject enemy, EnemySpawnData data)
     {
-        enemy.SetActive(true);
+        // SetActive는 SpawnEnemy에서 위치 설정 후 호출
         data.currentCount++;
         totalEnemyCount++;
     }
@@ -185,6 +185,7 @@ public class EnemySpawner : MonoBehaviour
             GameObject enemy = data.pool.Get();
             enemy.transform.position = position;
             enemy.transform.rotation = Quaternion.identity;
+            enemy.SetActive(true);  // 위치 설정 후 활성화
         }
     }
 
