@@ -23,6 +23,10 @@ public class EnemyController : MonoBehaviour
     [SerializeField] private float speedIncreaseInterval = 2f;
     [SerializeField] private float maxSpeed = 8f;
 
+    [Header("Despawn Settings")]
+    [SerializeField] private float despawnDistance = 25f; // 플레이어와 멀어지면 반환되는 거리
+    [SerializeField] private float despawnCheckInterval = 1f; // 거리 체크 주기
+
     [Header("Visibility Settings")]
     [SerializeField] private bool useOutline = false; // 아웃라인 사용 여부
     [SerializeField] private float eyesVisibleDistance = 10f; // Eyes가 보이는 거리
@@ -43,14 +47,16 @@ public class EnemyController : MonoBehaviour
     private float currentSpeed;
     private float timeInLight = 0f;
 
+    // 거리 체크 관련 변수
+    private float nextDespawnCheckTime;
+
     #endregion
 
     #region Unity Lifecycle
 
-    void Start()
+    void Awake()
     {
-        player = GameObject.FindGameObjectWithTag("Player")?.transform;
-
+        // 참조 찾기는 Awake에서 한 번만
         if (worldStateManager == null)
         {
             worldStateManager = FindFirstObjectByType<WorldStateManager>();
@@ -71,22 +77,17 @@ public class EnemyController : MonoBehaviour
                 eyesObject = eyesTransform.gameObject;
             }
         }
+    }
 
-        // 초기 설정
-        if (useOutline && enemyOutline != null)
-        {
-            enemyOutline.SetOutlineVisible(true); // 아웃라인 사용하면 항상 켜짐
-            enemyOutline.SetOutlineColor(Color.black); //기본색상 설정
-        }
-        else if (enemyOutline != null)
-        {
-            enemyOutline.SetOutlineVisible(false); // 아웃라인 사용 안하면 꺼짐
-        }
+    void OnEnable()
+    {
+        // 풀에서 재활성화될 때마다 초기 상태 설정
+        InitializeEnemy();
+    }
 
-        if (eyesObject != null)
-        {
-            eyesObject.SetActive(false); // 처음엔 꺼진 상태
-        }
+    void Start()
+    {
+        player = GameObject.FindGameObjectWithTag("Player")?.transform;
 
         // 이벤트 구독
         if (worldStateManager != null)
@@ -94,16 +95,6 @@ public class EnemyController : MonoBehaviour
             worldStateManager.onIsInvertedChanged.AddListener(OnInversionChanged);
             // 초기 상태 동기화
             isInverted = worldStateManager.IsInverted;
-        }
-
-        // LightSeeker의 경우 초기 속도 설정
-        if (enemyType == EnemyType.LightSeeker)
-        {
-            currentSpeed = lightSeekerBaseSpeed;
-        }
-        else
-        {
-            currentSpeed = speed;
         }
     }
 
@@ -118,6 +109,9 @@ public class EnemyController : MonoBehaviour
 
     void Update()
     {
+        // 플레이어와의 거리 체크 (일정 간격마다)
+        CheckDespawnDistance();
+
         // 거리에 따라 Eyes 표시 여부 결정
         UpdateVisibility();
 
@@ -134,6 +128,107 @@ public class EnemyController : MonoBehaviour
         {
             MoveTowardsPlayer();
         }
+    }
+
+    #endregion
+
+    #region Initialization
+
+    // 적이 스폰되거나 재활성화될 때 초기 상태 설정
+    private void InitializeEnemy()
+    {
+        // 아웃라인 초기 설정
+        if (useOutline && enemyOutline != null)
+        {
+            enemyOutline.SetOutlineVisible(true); // 아웃라인 사용하면 항상 켜짐
+
+            // 현재 반전 상태에 맞는 색상 설정
+            if (isInverted)
+            {
+                enemyOutline.SetOutlineColor(Color.white);
+            }
+            else
+            {
+                enemyOutline.SetOutlineColor(Color.black); //기본색상 설정
+            }
+        }
+        else if (enemyOutline != null)
+        {
+            enemyOutline.SetOutlineVisible(false); // 아웃라인 사용 안하면 꺼짐
+        }
+
+        // Eyes 초기 설정
+        if (eyesObject != null)
+        {
+            eyesObject.SetActive(false); // 처음엔 꺼진 상태
+        }
+
+        // 속도 초기화
+        if (enemyType == EnemyType.LightSeeker)
+        {
+            currentSpeed = lightSeekerBaseSpeed;
+        }
+        else
+        {
+            currentSpeed = speed;
+        }
+
+        // 상태 초기화
+        isInLight = false;
+        timeInLight = 0f;
+
+        // 거리 체크 타이머 초기화
+        nextDespawnCheckTime = Time.time + despawnCheckInterval;
+    }
+
+    #endregion
+
+    #region Despawn Check
+
+    // 플레이어와 거리가 멀어지면 풀에 반환
+    private void CheckDespawnDistance()
+    {
+        // 일정 간격마다만 체크 (성능 최적화)
+        if (Time.time < nextDespawnCheckTime) return;
+        nextDespawnCheckTime = Time.time + despawnCheckInterval;
+
+        if (player == null) return;
+
+        // sqrMagnitude 사용으로 성능 최적화 (제곱근 계산 생략)
+        float distanceSqr = (transform.position - player.position).sqrMagnitude;
+
+        if (distanceSqr > despawnDistance * despawnDistance)
+        {
+            Despawn();
+        }
+    }
+
+    // 거리가 멀어져서 반환되는 경우
+    private void Despawn()
+    {
+        // 아웃라인과 Eyes 끄기
+        if (useOutline && enemyOutline != null)
+        {
+            enemyOutline.SetOutlineVisible(false);
+        }
+
+        if (eyesObject != null)
+        {
+            eyesObject.SetActive(false);
+        }
+
+        // LightSeeker의 경우 속도 초기화
+        if (enemyType == EnemyType.LightSeeker)
+        {
+            currentSpeed = lightSeekerBaseSpeed;
+            timeInLight = 0f;
+        }
+
+        // 손전등 상태 초기화
+        isInLight = false;
+
+        // 풀에 반환
+        EnemySpawner.Instance?.ReturnEnemy(gameObject);
     }
 
     #endregion
