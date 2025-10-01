@@ -99,6 +99,7 @@ public class Flashlight2D : MonoBehaviour
 
     void OnValidate()
     {
+#if UNITY_EDITOR
         if (Application.isPlaying)
         {
             SetupChildObject();
@@ -117,6 +118,7 @@ public class Flashlight2D : MonoBehaviour
                 }
             };
         }
+#endif
     }
 
 
@@ -350,7 +352,7 @@ public class Flashlight2D : MonoBehaviour
 
         if (inverted) ChangeFlashlightInverted();
         else ChangeFlashlightNormal();
-        
+
         // 반전 '이벤트'가 발생한 그 프레임에만 한 번 처리
         if (changed && visualComponent != null && isInverted)
         {
