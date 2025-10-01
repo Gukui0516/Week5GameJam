@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 [DisallowMultipleComponent]
@@ -16,6 +17,12 @@ public class InvertPickup : MonoBehaviour, Item
         world = manager;
     }
 
+    /// <summary>
+    /// 스포너가 연결해줄 수 있는 콜백.
+    /// 예) pickup.onConsumed = () => ReleaseItem(item);
+    /// </summary>
+    public Action onConsumed;
+
     private void Awake()
     {
         // 에디터에서 안 넣었고, 주입도 안 됐을 경우 마지막 폴백
@@ -33,12 +40,25 @@ public class InvertPickup : MonoBehaviour, Item
     {
         if (!world)
         {
-            Debug.LogWarning("WorldStateManager가 연결되지 않음");
+            Debug.LogWarning("[InvertPickup] WorldStateManager가 연결되지 않음");
             return;
         }
 
-        Debug.Log("아이템 먹음");
+        Debug.Log("[InvertPickup] 아이템 먹음");
         world.ActivateInversion(invertDuration);
-        Destroy(gameObject);
+
+        // 1) 스포너 측에서 연결해준 반환 콜백이 있으면 그걸 먼저 호출
+        onConsumed?.Invoke();
+
+        // 2) PooledItem이 붙어 있으면 직접 풀로 반환 (Destroy 금지)
+        var pooled = GetComponent<PooledItem>();
+        if (pooled != null)
+        {
+            pooled.ReturnToPoolNow();
+            return;
+        }
+
+        // 3) 마지막 폴백: 그냥 비활성화(CountActive를 줄이도록 Destroy 대신)
+        gameObject.SetActive(false);
     }
 }

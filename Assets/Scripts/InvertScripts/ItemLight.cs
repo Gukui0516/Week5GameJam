@@ -6,6 +6,8 @@ public class ItemLight : MonoBehaviour
 {
     // 아이템에서 빛 뿜어져 나오는 거
 
+    #region Variables
+
     [Header("Visual")]
     [SerializeField] private Sprite lineSprite;
     [SerializeField] private Color color = Color.white;
@@ -30,6 +32,9 @@ public class ItemLight : MonoBehaviour
     private Coroutine loopCo;
     private bool stopped; // 수집/비활성화 후 추가 생성 방지
 
+    #endregion
+
+    #region Unity Lifecycle
     private void OnEnable()
     {
         stopped = false;
@@ -47,6 +52,18 @@ public class ItemLight : MonoBehaviour
         StopAndClearAll();
     }
 
+    #endregion
+
+    #region Spawn Loop
+    private IEnumerator Loop()
+    {
+        var wait = new WaitForSeconds(intervalSeconds);
+        while (!stopped)
+        {
+            SpawnFlyingStreak();
+            yield return wait;
+        }
+    }
     private void StopAndClearAll()
     {
         if (stopped) return;
@@ -66,17 +83,9 @@ public class ItemLight : MonoBehaviour
                 Destroy(child.gameObject);
         }
     }
+    #endregion
 
-    private IEnumerator Loop()
-    {
-        var wait = new WaitForSeconds(intervalSeconds);
-        while (!stopped)
-        {
-            SpawnFlyingStreak();
-            yield return wait;
-        }
-    }
-
+    #region Streak Logic
     private void SpawnFlyingStreak()
     {
         var go = new GameObject("Streak");
@@ -109,7 +118,7 @@ public class ItemLight : MonoBehaviour
 
     private IEnumerator GrowTravelFadeLocal(SpriteRenderer sr, Transform tr, Vector2 localDir, float spriteWidth, float targetLen)
     {
-        // 성장 (로컬)
+        // 빛 뻗어져 나가는 거 (로컬)
         float t = 0f;
         while (t < growDuration)
         {
@@ -128,7 +137,7 @@ public class ItemLight : MonoBehaviour
         if (holdDuration > 0f)
             yield return new WaitForSeconds(holdDuration);
 
-        // 비행도 로컬 좌표로(부모가 움직여도 항상 같은 상대 이동)
+        // 날라가는 것도 로컬 좌표로(부모가 움직여도 항상 같은 상대 이동)
         float flight = 0f;
         while (flight < travelDuration)
         {
@@ -153,6 +162,10 @@ public class ItemLight : MonoBehaviour
         if (sr) Destroy(sr.gameObject);
     }
 
+    #endregion
+
+    #region Utilities
+
     private Sprite GetLineSprite()
     {
         if (lineSprite) return lineSprite;
@@ -165,4 +178,6 @@ public class ItemLight : MonoBehaviour
                                      new Vector2(0.5f, 0.5f), 1f);
         return runtimeWhite;
     }
+
+    #endregion
 }
