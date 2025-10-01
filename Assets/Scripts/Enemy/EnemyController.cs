@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.UI;
 
 public class EnemyController : MonoBehaviour
@@ -120,16 +120,17 @@ public class EnemyController : MonoBehaviour
         // 거리에 따라 Eyes 표시 여부 결정
         UpdateVisibility();
 
-        // 회전 조건 수정: LightSeeker는 손전등 안에서도 회전
+        // Normal은 반전시 완전 정지 (회전도 멈춤)
+        if (IsStoppedByInversion()) return;
+
+        // 회전 조건: LightSeeker는 반전 상태에 따라, Normal은 손전등 밖에서만
         if (enableRotation && player != null && ShouldRotate())
         {
             RotateTowardsPlayer();
         }
 
-        if (IsStoppedByInversion()) return;
-
-        // LightSeeker 타입이고 손전등 안에 있을 때 속도 증가
-        if (enemyType == EnemyType.LightSeeker && isInLight)
+        // LightSeeker 타입이고 손전등 안에 있을 때 속도 증가 (반전 아닐때만)
+        if (enemyType == EnemyType.LightSeeker && isInLight && !isInverted)
         {
             UpdateLightSeekerSpeed();
         }
@@ -153,8 +154,8 @@ public class EnemyController : MonoBehaviour
         {
             enemyOutline.SetOutlineVisible(true); // 아웃라인 사용하면 항상 켜짐
 
-            // 현재 반전 상태에 맞는 색상 설정
-            if (isInverted)
+            // LightSeeker는 항상 검은색, Normal은 현재 반전 상태에 맞는 색상 설정
+            if (enemyType == EnemyType.LightSeeker)
             {
                 enemyOutline.SetOutlineColor(Color.black);
             }
@@ -255,36 +256,49 @@ public class EnemyController : MonoBehaviour
                 return !isInLight; // 손전등 없을 때 움직임
 
             case EnemyType.LightSeeker:
-                return isInLight; // 손전등 비춰질 때만 움직임
+                // 반전 상태일 때는 Normal처럼 행동 (손전등 밖에서 움직임)
+                if (isInverted)
+                {
+                    return !isInLight;
+                }
+                // 평소에는 손전등 비춰질 때만 움직임
+                return isInLight;
 
             default:
                 return false;
         }
     }
 
-    // LightSeeker는 반전 상태에서도 멈추지 않음
+    // 배경 바뀌면 멈춤 (LightSeeker는 멈추지 않고 패턴만 변경)
     private bool IsStoppedByInversion()
     {
+        // LightSeeker는 반전 상태에서도 계속 움직임 (패턴만 변경)
         if (enemyType == EnemyType.LightSeeker)
         {
-            return false; // LightSeeker는 반전 상태 무시
+            return false;
         }
 
         return worldStateManager != null && worldStateManager.IsInverted;
     }
 
-    // LightSeeker는 손전등 안에서도 회전
+    // 회전 조건 판단
     private bool ShouldRotate()
     {
         if (enemyType == EnemyType.LightSeeker)
         {
-            return true; // 항상 회전
+            // 반전 상태일 때는 Normal처럼 손전등 밖에서만 회전
+            if (isInverted)
+            {
+                return !isInLight;
+            }
+            // 평소에는 항상 회전
+            return true;
         }
 
         return !isInLight; // Normal은 손전등 밖에서만 회전
     }
 
-    private void MoveTowardsPlayer()
+    private void MoveTowardsPlayer() //플레이어 향해 이동
     {
         if (player == null) return;
 
@@ -297,7 +311,7 @@ public class EnemyController : MonoBehaviour
         }
     }
 
-    // 플레이어 방향으로 회전 (움직임과 별개로 항상 실행)
+    // 플레이어 방향으로 회전 (움직임과 별개로 조건에 맞을 때 실행)
     private void RotateTowardsPlayer()
     {
         // 플레이어 방향 벡터 계산
@@ -306,7 +320,7 @@ public class EnemyController : MonoBehaviour
         // direction 벡터로부터 각도 계산
         float targetAngle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
 
-        // 스프라이트의 기본 방향 오프셋 적용 (아래를 보고 있으므로 90도 추가)
+        // 스프라이트의 기본 방향 오프셋 적용 (아래를 보고 있으므로 180도 추가)
         targetAngle -= rotationOffset;
 
         // 현재 회전값
@@ -319,27 +333,26 @@ public class EnemyController : MonoBehaviour
         transform.rotation = Quaternion.Euler(0, 0, smoothAngle);
     }
 
-    // LightSeeker의 속도를 손전등에 있는 시간에 따라 증가
-    //private void UpdateLightSeekerSpeed()
-    //{
-    //    timeInLight += Time.deltaTime;
-
-    //    // speedIncreaseInterval마다 속도 2씩 증가 (2, 4, 6, 8)
-    //    float speedBonus = Mathf.Floor(timeInLight / speedIncreaseInterval) * speedIncreaseRate;
-    //    currentSpeed = Mathf.Min(lightSeekerBaseSpeed + speedBonus, maxSpeed);
-    //}
-
-    //지수적 증가 버전
-         private void UpdateLightSeekerSpeed()
+    // LightSeeker의 속도를 손전등에 있는 시간에 따라 지수적으로 증가
+    private void UpdateLightSeekerSpeed()
     {
         timeInLight += Time.deltaTime;
 
-        //지수적 증가: baseSpeed * (multiplier ^ 경과 인터벌 수)
-             int intervals = Mathf.FloorToInt(timeInLight / speedIncreaseInterval);
+        // 지수적 증가: baseSpeed * (multiplier ^ 경과 인터벌 수)
+        int intervals = Mathf.FloorToInt(timeInLight / speedIncreaseInterval);
         float speedMultiplier = Mathf.Pow(speedIncreaseRate, intervals);
 
         currentSpeed = Mathf.Min(lightSeekerBaseSpeed * speedMultiplier, maxSpeed);
     }
+
+    // 선형 증가 버전 (주석 처리)
+    // private void UpdateLightSeekerSpeed()
+    // {
+    //     timeInLight += Time.deltaTime;
+    //     // speedIncreaseInterval마다 speedIncreaseRate씩 증가
+    //     float speedBonus = Mathf.Floor(timeInLight / speedIncreaseInterval) * speedIncreaseRate;
+    //     currentSpeed = Mathf.Min(lightSeekerBaseSpeed + speedBonus, maxSpeed);
+    // }
 
     #endregion
 
@@ -356,7 +369,7 @@ public class EnemyController : MonoBehaviour
         UpdateEyesVisibility(distance);
     }
 
-    // Eyes 업데이트 - Normal은 거리만, LightSeeker는 거리 또는 손전등
+    // Eyes 업데이트 - Normal은 거리만, LightSeeker는 항상 보임
     private void UpdateEyesVisibility(float distance)
     {
         if (eyesObject == null) return;
@@ -365,12 +378,12 @@ public class EnemyController : MonoBehaviour
 
         if (enemyType == EnemyType.LightSeeker)
         {
-            // LightSeeker: 거리 안에 있거나 OR 손전등에 비춰질 때 켜짐
-            shouldBeActive = distance <= eyesVisibleDistance || isInLight;
+            // LightSeeker: 항상 눈 보임
+            shouldBeActive = true;
         }
         else
         {
-            // Normal: 거리 안에 있을 때만
+            // Normal: 거리 안에 있을 때만 켜짐
             shouldBeActive = distance <= eyesVisibleDistance;
         }
 
@@ -406,7 +419,7 @@ public class EnemyController : MonoBehaviour
         isInverted = inverted;
         Debug.Log($"{gameObject.name} 반전 상태: {inverted}");
 
-        // LightSeeker는 색상 변경 없음, Normal만 변경
+        // 반전 상태에 따라 아웃라인 색상 변경 (useOutline이 true이고 Normal일 때만)
         if (useOutline && enemyOutline != null && enemyType != EnemyType.LightSeeker)
         {
             UpdateOutlineColor();
@@ -424,21 +437,8 @@ public class EnemyController : MonoBehaviour
             isInLight = true;
             Debug.Log($"{gameObject.name} 손전등 진입!");
 
-            // 손전등에 비춰지면 노란색 아웃라인 (useOutline이 true일 때만)
-            // if (useOutline && enemyOutline != null)
-            // {
-            //     if (enemyType == EnemyType.LightSeeker)
-            //     {
-            //         enemyOutline.SetOutlineColor(Color.black);
-            //     }
-            //     else
-            //     {
-            //         enemyOutline.SetOutlineColor(Color.black);
-            //     }
-            // }
-
-            // Normal만 반전 상태에서 죽음
-            if (isInverted && enemyType != EnemyType.LightSeeker)
+            // 반전 상태에서 손전등 맞으면 모두 죽음
+            if (isInverted)
             {
                 Die();
             }
