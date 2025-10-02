@@ -12,7 +12,7 @@ public class GameOverUI : MonoBehaviour
         restartButton.onClick.AddListener(OnRestartClicked);
         quitButton.onClick.AddListener(OnQuitClicked);
         Hide(); // 시작 시 숨김
-        
+
     }
 
     public void Show()
@@ -29,7 +29,7 @@ public class GameOverUI : MonoBehaviour
     private void OnRestartClicked()
     {
         Hide();
-        GameManager.Instance.Restart();
+        GameManager.Instance.ReloadStage();
     }
 
     private void OnQuitClicked()
@@ -37,4 +37,13 @@ public class GameOverUI : MonoBehaviour
         Hide();
         GameManager.Instance.QuitGame();
     }
+
+    private void OnTitleSceneClicked()
+    {
+        Hide();
+        GameManager.Instance.GoTitle();
+    }
+
+    
+
 }

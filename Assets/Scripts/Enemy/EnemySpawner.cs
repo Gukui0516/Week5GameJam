@@ -60,6 +60,16 @@ public class EnemySpawner : MonoBehaviour
             return;
         }
 
+        // ⭐ 모든 적 타입의 스폰 설정을 0으로 초기화
+        // (Inspector 값은 프리팹 참조용으로만 사용)
+        foreach (var enemyData in enemyTypes)
+        {
+            enemyData.maxCount = 0;
+            enemyData.spawnInterval = 0f;
+            enemyData.currentCount = 0;
+            enemyData.spawnCoroutine = null;
+        }
+
         InitializePools();
     }
 
@@ -74,9 +84,7 @@ public class EnemySpawner : MonoBehaviour
         }
 
         ApplyStageEnemySettings();
-        StartAllSpawners();
     }
-
     void Update()
     {
         if (GameManager.Instance != null)
@@ -89,7 +97,6 @@ public class EnemySpawner : MonoBehaviour
                 StopAllSpawners();
                 ClearAllEnemies();
                 ApplyStageEnemySettings();
-                StartAllSpawners();
             }
         }
     }
@@ -114,36 +121,65 @@ public class EnemySpawner : MonoBehaviour
         int currentStage = (int)GameManager.Instance.CurrentStage;
         lastAppliedStage = currentStage;
 
-        Debug.Log($"[EnemySpawner] Applying enemy settings for Stage: {currentStage}");
+        Debug.Log($"[EnemySpawner] === Applying enemy settings for Stage: {currentStage} ===");
 
         foreach (var enemyData in enemyTypes)
         {
             int previousMaxCount = enemyData.maxCount;
+            float previousInterval = enemyData.spawnInterval;
 
             if (enemyData.enemyName == "Normal")
             {
                 switch (currentStage)
                 {
-                    case 1: enemyData.maxCount = 8; break;
-                    case 2: enemyData.maxCount = 10; break;
-                    case 3: enemyData.maxCount = 12; break;
-                    default: enemyData.maxCount = 8; break;
+                    case 1:
+                        enemyData.maxCount = 4;
+                        enemyData.spawnInterval = 3f;
+                        break;
+                    case 2:
+                        enemyData.maxCount = 8;
+                        enemyData.spawnInterval = 2.5f;
+                        break;
+                    case 3:
+                        enemyData.maxCount = 12;
+                        enemyData.spawnInterval = 2f;
+                        break;
+                    default:
+                        enemyData.maxCount = 4;
+                        enemyData.spawnInterval = 3f;
+                        break;
                 }
             }
             else if (enemyData.enemyName == "LightSeeker")
             {
                 switch (currentStage)
                 {
-                    case 1: enemyData.maxCount = 0; break;
-                    case 2: enemyData.maxCount = 3; break;
-                    case 3: enemyData.maxCount = 5; break;
-                    default: enemyData.maxCount = 0; break;
+                    case 1:
+                        enemyData.maxCount = 0;
+                        enemyData.spawnInterval = 0f;
+                        break;
+                    case 2:
+                        enemyData.maxCount = 2;
+                        enemyData.spawnInterval = 2.5f;
+                        break;
+                    case 3:
+                        enemyData.maxCount = 4;
+                        enemyData.spawnInterval = 2f;
+                        break;
+                    default:
+                        enemyData.maxCount = 0;
+                        enemyData.spawnInterval = 0f;
+                        break;
                 }
             }
 
-            Debug.Log($"[EnemySpawner] Stage {currentStage}: {enemyData.enemyName} maxCount changed {previousMaxCount} -> {enemyData.maxCount}");
+            Debug.Log($"[EnemySpawner] {enemyData.enemyName}: maxCount {previousMaxCount} -> {enemyData.maxCount}, interval {previousInterval} -> {enemyData.spawnInterval}");
         }
+
+        // ⭐ 설정 적용 후 스포너 시작
+        StartAllSpawners();
     }
+
 
     void ClearAllEnemies()
     {

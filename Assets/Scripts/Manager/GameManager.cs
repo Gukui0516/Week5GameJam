@@ -68,7 +68,7 @@ public class GameManager : MonoBehaviour
         // EndingUI가 씬 오브젝트라면, 씬 전환 시 새 오브젝트를 다시 잡아준다.
         if (!endingUI)
         {
-            var hook = FindObjectOfType<EndingUI>(true);
+            var hook = FindFirstObjectByType<EndingUI>();
             if (hook) endingUI = hook;
         }
 
@@ -110,8 +110,14 @@ public class GameManager : MonoBehaviour
     // 현재 스테이지 유지한 채 게임 씬 재로드
     public void ReloadStage()
     {
-        if (current == GameState.GameOver) return;
+        current = GameState.Boot;
+        endingShown = false;
+
+        if (endingUI) endingUI.Hide();
+
         sceneDirector.LoadGame();
+        current = GameState.Playing;
+        Resume();
     }
 
     // 스테이지 +1 올리고 같은 게임 씬 재로드
@@ -174,7 +180,7 @@ public class GameManager : MonoBehaviour
         // EndingUI가 비어있다면 한 번 더 찾아본 후 표시
         if (!endingUI)
         {
-            endingUI = FindObjectOfType<EndingUI>(true);
+            endingUI = FindFirstObjectByType<EndingUI>();
         }
 
         if (endingUI)
@@ -186,4 +192,14 @@ public class GameManager : MonoBehaviour
             Debug.LogError("[GameManager] EndingUI not found/bound. Place an EndingUI in the scene or bind a persistent prefab.");
         }
     }
+
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Alpha1))
+        {
+            AdvanceStageAndReload();
+        }
+    }
+
+    
 }
