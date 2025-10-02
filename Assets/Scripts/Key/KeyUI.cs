@@ -28,6 +28,7 @@ public class KeyUI : MonoBehaviour
     private Coroutine fadeCo;
     private WorldStateManager worldStateManager;
     private bool isInverted = false;
+    private KeyUIManager.DisplayMode currentDisplayMode = KeyUIManager.DisplayMode.RequirementBased;
 
     private void Awake()
     {
@@ -142,12 +143,50 @@ public class KeyUI : MonoBehaviour
         int count = collector ? collector.Get(keyKind) : 0;
         //if (countText) countText.text = $"x{Mathf.Max(0, count)}";
 
-        bool required = KeyStageContext.IsRequired(keyKind);
-        float targetA = required
-            ? (count > 0 ? alphaRequiredOwned : alphaRequiredNotOwned)
-            : alphaNotRequired;
-
+        float targetA = CalculateTargetAlpha(count);
         FadeTo(targetA);
+    }
+
+    /// <summary>
+    /// 현재 디스플레이 모드에 따라 목표 알파값 계산
+    /// </summary>
+    private float CalculateTargetAlpha(int count)
+    {
+        switch (currentDisplayMode)
+        {
+            case KeyUIManager.DisplayMode.RequirementBased:
+                // 모드 1: 요구키 기반
+                bool required = KeyStageContext.IsRequired(keyKind);
+                return required
+                    ? (count > 0 ? alphaRequiredOwned : alphaRequiredNotOwned)
+                    : alphaNotRequired;
+
+            case KeyUIManager.DisplayMode.OwnedBased:
+                // 모드 2: 소유 여부만 기반 (모든 키를 항상 표시)
+                return count > 0 ? alphaRequiredOwned : alphaRequiredNotOwned;
+
+            default:
+                return alphaNotRequired;
+        }
+    }
+
+    /// <summary>
+    /// 외부(KeyUIManager)에서 디스플레이 모드를 설정
+    /// </summary>
+    public void SetDisplayMode(KeyUIManager.DisplayMode mode)
+    {
+        if (currentDisplayMode == mode) return;
+
+        currentDisplayMode = mode;
+        RefreshFromCollectorAndStage();
+    }
+
+    /// <summary>
+    /// 현재 디스플레이 모드 반환
+    /// </summary>
+    public KeyUIManager.DisplayMode GetDisplayMode()
+    {
+        return currentDisplayMode;
     }
 
     private void FadeTo(float targetA)
