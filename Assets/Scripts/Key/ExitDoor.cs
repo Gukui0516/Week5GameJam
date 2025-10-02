@@ -132,8 +132,12 @@ public class ExitDoor : MonoBehaviour
             }
             else
             {
+                if (GameManager.Instance.CurrentStage == 3)
+                {
+                    GameManager.Instance.PlayEnding();
+                }
                 // 2차: 다음 씬으로 이동
-                ProceedToNextStageOrScene();
+                    ProceedToNextStageOrScene();
             }
         }
     }
