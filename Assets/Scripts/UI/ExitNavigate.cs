@@ -7,13 +7,15 @@ public class ExitNavigate : MonoBehaviour
     [SerializeField] private WorldStateManager worldStateManager;
     Transform player;
     private Image uiImage;
+    private Image uiImageChild;
     Vector2 length;
     [SerializeField] bool isOnScreen;//출구가 화면 안에 있는가
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         uiImage = GetComponent<Image>();
-        length= GetComponent<RectTransform>().pivot;
+        uiImageChild = transform.GetChild(0).GetComponent<Image>();
+        length = GetComponent<RectTransform>().pivot;
         player = GameObject.FindGameObjectWithTag("Player")?.transform;
         if (worldStateManager == null)
         {
@@ -31,6 +33,7 @@ public class ExitNavigate : MonoBehaviour
     {
         if (worldStateManager.IsInverted)
         {
+            uiImageChild.enabled = true;
             uiImage.enabled = true;
             Vector2 dir = player.transform.position - exit.transform.position;
 
@@ -42,9 +45,14 @@ public class ExitNavigate : MonoBehaviour
         }
         else
         {
+            uiImageChild.enabled = false;
             uiImage.enabled = false;
         }
-        if (isOnScreen) uiImage.enabled = false;
+        if (isOnScreen)
+        {
+            uiImageChild.enabled = false;
+            uiImage.enabled = false; 
+        }
     }
     public void ExitScreenIn()
     {
