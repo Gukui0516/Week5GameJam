@@ -170,27 +170,7 @@ public class GameManager : MonoBehaviour
 
     private void PlayEnding()
     {
-        if (endingShown) return;
-        endingShown = true;
-
-        // 상태 전환 & 정지
-        current = GameState.GameOver;
-        Time.timeScale = 0f;
-
-        // EndingUI가 비어있다면 한 번 더 찾아본 후 표시
-        if (!endingUI)
-        {
-            endingUI = FindFirstObjectByType<EndingUI>();
-        }
-
-        if (endingUI)
-        {
-            endingUI.Show(endingMessage);
-        }
-        else
-        {
-            Debug.LogError("[GameManager] EndingUI not found/bound. Place an EndingUI in the scene or bind a persistent prefab.");
-        }
+        sceneDirector.LoadEnding();
     }
 
     void Update()
