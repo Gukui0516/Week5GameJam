@@ -27,13 +27,9 @@ public class GameManager : MonoBehaviour
 
     [Header("UI 참조")]
     public GameOverUI gameOverUI;
-    public EndingUI endingUI; // EndingUI가 Awake에서 자동 등록
 
-    [Header("Ending (단순 표시)")]
-    [SerializeField] private int endingStage = 4;        // 해당 스테이지 도달 시 엔딩
-    [SerializeField] private string endingMessage = "You Escaped.";
+    [SerializeField] int endingStage = 4;
 
-    private bool endingShown = false;
 
     private void Awake()
     {
@@ -48,14 +44,9 @@ public class GameManager : MonoBehaviour
         if (!sceneDirector)
             sceneDirector = GetComponent<SceneDirector>();
 
-        // 씬 로드시 EndingUI 자동 재바인딩
-        SceneManager.sceneLoaded += OnSceneLoaded_Rebind;
+        
     }
 
-    private void OnDestroy()
-    {
-        SceneManager.sceneLoaded -= OnSceneLoaded_Rebind;
-    }
 
     private void Start()
     {
@@ -63,18 +54,7 @@ public class GameManager : MonoBehaviour
         else StartNewGame();
     }
 
-    private void OnSceneLoaded_Rebind(Scene s, LoadSceneMode mode)
-    {
-        // EndingUI가 씬 오브젝트라면, 씬 전환 시 새 오브젝트를 다시 잡아준다.
-        if (!endingUI)
-        {
-            var hook = FindFirstObjectByType<EndingUI>();
-            if (hook) endingUI = hook;
-        }
-
-        // 씬 진입 시엔 엔딩 UI는 숨김 상태가 자연스럽다.
-        if (endingUI) endingUI.HideImmediate();  // ← Hide() 대신 HideImmediate() 권장
-    }
+    
 
     // ======= 공개 API =======
 
@@ -82,9 +62,8 @@ public class GameManager : MonoBehaviour
     {
         current = GameState.Boot;
         currentStage = 1;
-        endingShown = false;
+        
 
-        if (endingUI) endingUI.Hide();
 
         sceneDirector.LoadGame();
         current = GameState.Playing;
@@ -94,9 +73,6 @@ public class GameManager : MonoBehaviour
     public void GoTitle()
     {
         current = GameState.Boot;
-        endingShown = false;
-
-        if (endingUI) endingUI.Hide();
 
         sceneDirector.LoadTitle();
         Resume();
@@ -111,9 +87,6 @@ public class GameManager : MonoBehaviour
     public void ReloadStage()
     {
         current = GameState.Boot;
-        endingShown = false;
-
-        if (endingUI) endingUI.Hide();
 
         sceneDirector.LoadGame();
         current = GameState.Playing;
@@ -126,7 +99,7 @@ public class GameManager : MonoBehaviour
     {
         currentStage = Mathf.Max(1, currentStage + 1);
 
-        if (!endingShown && currentStage >= endingStage)
+        if (currentStage >= endingStage)
         {
             PlayEnding();
             return;
