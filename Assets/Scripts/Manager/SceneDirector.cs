@@ -52,6 +52,7 @@ public class SceneDirector : MonoBehaviour
         // SceneReference 내부 캐싱 갱신
         titleScene.OnValidate();
         gameScene.OnValidate();
+        endingScene.OnValidate();
     }
 #endif
 

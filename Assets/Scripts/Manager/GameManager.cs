@@ -141,7 +141,7 @@ public class GameManager : MonoBehaviour
 
     // ======= 엔딩: 단순 즉시 표시 =======
 
-    private void PlayEnding()
+    public void PlayEnding()
     {
         sceneDirector.LoadEnding();
     }
