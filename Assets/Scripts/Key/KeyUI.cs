@@ -26,6 +26,8 @@ public class KeyUI : MonoBehaviour
 
     private KeyCollector collector;
     private Coroutine fadeCo;
+    private WorldStateManager worldStateManager;
+    private bool isInverted = false;
 
     private void Awake()
     {
@@ -36,6 +38,8 @@ public class KeyUI : MonoBehaviour
     private void OnEnable()
     {
         TryHookCollector();
+        TryHookWorldStateManager();
+        
         if (resetVisualOnSceneLoad)
             SceneManager.sceneLoaded += OnSceneLoaded;
 
@@ -47,6 +51,8 @@ public class KeyUI : MonoBehaviour
     private void OnDisable()
     {
         UnhookCollector();
+        UnhookWorldStateManager();
+        
         if (resetVisualOnSceneLoad)
             SceneManager.sceneLoaded -= OnSceneLoaded;
 
@@ -56,12 +62,53 @@ public class KeyUI : MonoBehaviour
     private void OnSceneLoaded(Scene s, LoadSceneMode m)
     {
         // 새 씬 기준으로 다시 동기화
+        TryHookWorldStateManager();
         RefreshFromCollectorAndStage();
     }
 
     private void OnRequirementsChanged()
     {
         RefreshFromCollectorAndStage();
+    }
+
+    private void TryHookWorldStateManager()
+    {
+#if UNITY_2023_1_OR_NEWER || UNITY_6_0_OR_NEWER
+        worldStateManager = FindFirstObjectByType<WorldStateManager>(FindObjectsInactive.Exclude);
+#else
+        worldStateManager = FindObjectOfType<WorldStateManager>();
+#endif
+        if (worldStateManager != null)
+        {
+            worldStateManager.onIsInvertedChanged.AddListener(OnInvertedChanged);
+            // 현재 상태 즉시 적용
+            isInverted = worldStateManager.IsInverted;
+            UpdateColor();
+        }
+    }
+
+    private void UnhookWorldStateManager()
+    {
+        if (worldStateManager != null)
+        {
+            worldStateManager.onIsInvertedChanged.RemoveListener(OnInvertedChanged);
+            worldStateManager = null;
+        }
+    }
+
+    private void OnInvertedChanged(bool inverted)
+    {
+        isInverted = inverted;
+        UpdateColor();
+    }
+
+    private void UpdateColor()
+    {
+        if (icon == null) return;
+
+        Color targetColor = isInverted ? Color.black : Color.white;
+        Color currentColor = icon.color;
+        icon.color = new Color(targetColor.r, targetColor.g, targetColor.b, currentColor.a);
     }
 
     private void TryHookCollector()
@@ -126,7 +173,11 @@ public class KeyUI : MonoBehaviour
             t += Time.deltaTime;
             float k = dur <= 0f ? 1f : Mathf.Clamp01(t / dur);
 
-            if (icon)     icon.color     = new Color(ic.r, ic.g, ic.b, Mathf.Lerp(startIconA, targetA, k));
+            if (icon)
+            {
+                Color targetColor = isInverted ? Color.black : Color.white;
+                icon.color = new Color(targetColor.r, targetColor.g, targetColor.b, Mathf.Lerp(startIconA, targetA, k));
+            }
             //if (countText) countText.color = new Color(cc.r, cc.g, cc.b, Mathf.Lerp(startCountA, targetA, k));
             //if (titleText) titleText.color = new Color(tc.r, tc.g, tc.b, Mathf.Lerp(startTitleA, targetA, k));
 
@@ -137,7 +188,11 @@ public class KeyUI : MonoBehaviour
 
     private void SetAlphaAll(float a)
     {
-        if (icon)      icon.color     = new Color(icon.color.r, icon.color.g, icon.color.b, a);
+        if (icon)
+        {
+            Color targetColor = isInverted ? Color.black : Color.white;
+            icon.color = new Color(targetColor.r, targetColor.g, targetColor.b, a);
+        }
         //if (countText) countText.color = new Color(countText.color.r, countText.color.g, countText.color.b, a);
         //if (titleText) titleText.color = new Color(titleText.color.r, titleText.color.g, titleText.color.b, a);
     }
