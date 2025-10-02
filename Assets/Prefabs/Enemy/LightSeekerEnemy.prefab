@@ -136,7 +136,7 @@ GameObject:
   - component: {fileID: 5101757877946332033}
   m_Layer: 6
   m_Name: LightSeekerEnemy
-  m_TagString: Enemy
+  m_TagString: EnemyWhite
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -294,7 +294,7 @@ MonoBehaviour:
   lightSeekerBaseSpeed: 1
   speedIncreaseRate: 1.2
   speedIncreaseInterval: 0.1
-  maxSpeed: 16
+  maxSpeed: 8
   despawnDistance: 25
   despawnCheckInterval: 1
   useOutline: 1

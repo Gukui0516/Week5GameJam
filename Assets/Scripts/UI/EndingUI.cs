@@ -26,8 +26,7 @@ public class EndingUI : MonoBehaviour
             panel.SetActive(false);
         }
 
-        if (GameManager.Instance)
-            GameManager.Instance.endingUI = this;
+        
     }
 
     void TryInit()

@@ -8,6 +8,7 @@ TagManager:
   - Item
   - GameOverUI
   - EndingUI
+  - EnemyWhite
   layers:
   - Default
   - TransparentFX

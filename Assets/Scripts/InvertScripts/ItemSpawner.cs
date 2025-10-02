@@ -71,7 +71,20 @@ public class ItemSpawner : MonoBehaviour
         if (playerGO) player = playerGO.transform;
         else Debug.LogWarning("[ItemSpawner] Player 태그 오브젝트를 찾지 못했습니다.");
 
+        // 게임 시작 시 첫 아이템 즉시 생성
+        SpawnInitialItem();
+
         StartCoroutine(SpawnCoroutine());
+    }
+
+    /// <summary>
+    /// 게임 시작 시 첫 아이템을 생성
+    /// </summary>
+    void SpawnInitialItem()
+    {
+        Vector2 spawnPosition = GetRandomSpawnPosition();
+        SpawnItem(spawnPosition);
+        Debug.Log($"[ItemSpawner] Initial item spawned at {spawnPosition}");
     }
 
     #endregion

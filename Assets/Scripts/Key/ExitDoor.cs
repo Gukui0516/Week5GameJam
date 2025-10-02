@@ -17,9 +17,9 @@ public class ExitDoor : MonoBehaviour
     [Header("Position Settings")]
     [SerializeField] private bool autoPositionOnStart = true;
     [SerializeField] private string playerTag = "Player";
-    [SerializeField] private float stage1Distance = 80f;
-    [SerializeField] private float stage2Distance = 120f;
-    [SerializeField] private float stage3Distance = 160f;
+    [SerializeField] private float stage1Distance = 70f;
+    [SerializeField] private float stage2Distance = 80f;
+    [SerializeField] private float stage3Distance = 90f;
 
     [Header("Interact")]
     [SerializeField] private KeyCode interactKey = KeyCode.E;
@@ -132,8 +132,12 @@ public class ExitDoor : MonoBehaviour
             }
             else
             {
+                if (GameManager.Instance.CurrentStage == 3)
+                {
+                    GameManager.Instance.PlayEnding();
+                }
                 // 2차: 다음 씬으로 이동
-                ProceedToNextStageOrScene();
+                    ProceedToNextStageOrScene();
             }
         }
     }
