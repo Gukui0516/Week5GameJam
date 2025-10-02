@@ -42,6 +42,7 @@ public class SceneDirector : MonoBehaviour
     [Header("기본 씬 참조(인스펙터에서 드래그)")]
     [SerializeField] private SceneReference titleScene;
     [SerializeField] private SceneReference gameScene;
+    [SerializeField] private SceneReference endingScene;
 
     public bool IsLoading { get; private set; }
 
@@ -56,9 +57,11 @@ public class SceneDirector : MonoBehaviour
 
     public string TitleSceneName => titleScene.SceneName;
     public string GameSceneName  => gameScene.SceneName;
+    public string EndingSceneName => endingScene.SceneName;
 
     public void LoadTitle() => LoadByName(TitleSceneName);
     public void LoadGame()  => LoadByName(GameSceneName);
+    public void LoadEnding() => LoadByName(EndingSceneName);
     public void ReloadActive() => LoadByName(SceneManager.GetActiveScene().name);
 
     public void LoadByName(string sceneName)
