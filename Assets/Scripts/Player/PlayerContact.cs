@@ -38,7 +38,7 @@ public class PlayerContact : MonoBehaviour
                 {
                     if (worldStateManager.IsInverted == true)
                         return;
-                    //Debug.Log(hit.gameObject.name);
+                    Debug.Log(hit.gameObject.name);
                     GetComponentInChildren<Flashlight2D>().isOn = false ;
                     GameManager.Instance.GameOver();
                     isContact = true;
