@@ -168,16 +168,6 @@ public class Flashlight2DVisual : MonoBehaviour
     {
         if (meshRenderer == null) return;
 
-        // 프리팹 모드 체크 추가
-        #if UNITY_EDITOR
-        if (UnityEditor.PrefabUtility.IsPartOfPrefabAsset(gameObject))
-        {
-            // 프리팹 에셋인 경우 sharedMaterial만 사용
-            UpdateSharedMaterial(color, sortingLayerName, sortingOrder);
-            return;
-        }
-        #endif
-
         // 셰이더 찾기
         Shader shader = Shader.Find("Sprites/Default");
         if (shader == null) shader = Shader.Find("Universal Render Pipeline/Unlit");
@@ -190,8 +180,9 @@ public class Flashlight2DVisual : MonoBehaviour
             return;
         }
 
-        // 플레이 모드에 따라 material/sharedMaterial 선택
-        Material mat = Application.isPlaying ? meshRenderer.material : meshRenderer.sharedMaterial;
+        // 런타임에서는 material, 그 외에는 sharedMaterial 사용
+        bool useSharedMaterial = !Application.isPlaying;
+        Material mat = useSharedMaterial ? meshRenderer.sharedMaterial : meshRenderer.material;
 
         // 머티리얼이 없거나 셰이더가 다르면 새로 생성
         bool needsNewMaterial = mat == null || mat.shader != shader;
@@ -220,39 +211,19 @@ public class Flashlight2DVisual : MonoBehaviour
         }
 
         // 머티리얼 할당
-        if (Application.isPlaying)
-        {
-            meshRenderer.material = mat;
-        }
-        else
+        if (useSharedMaterial)
         {
             meshRenderer.sharedMaterial = mat;
         }
+        else
+        {
+            meshRenderer.material = mat;
+        }
 
         // 렌더러 설정
         meshRenderer.sortingLayerName = sortingLayerName;
         meshRenderer.sortingOrder = sortingOrder;
     }
-
-    #if UNITY_EDITOR
-    // 프리팹용 별도 처리
-    private void UpdateSharedMaterial(Color color, string sortingLayerName, int sortingOrder)
-    {
-        if (meshRenderer == null || meshRenderer.sharedMaterial == null) return;
-        
-        Material mat = meshRenderer.sharedMaterial;
-        
-        // 색상만 업데이트 (셰이더에 따라)
-        if (mat.HasProperty("_Color"))
-            mat.color = color;
-        else if (mat.HasProperty("_BaseColor"))
-            mat.SetColor("_BaseColor", color);
-        
-        // 렌더러 설정
-        meshRenderer.sortingLayerName = sortingLayerName;
-        meshRenderer.sortingOrder = sortingOrder;
-    }
-    #endif
 
     public void UpdateToggle(bool isOn)
     {
@@ -338,7 +309,7 @@ public class Flashlight2DVisual : MonoBehaviour
         }
     }
 
-#region OnTriggerEnter/Exit Handlers
+    #region OnTriggerEnter/Exit Handlers
     /// <summary>
     /// 새로운 대상을 감지했을 때 호출되는 메서드. (OnTriggerEnter2D 역할)
     /// </summary>
@@ -349,7 +320,7 @@ public class Flashlight2DVisual : MonoBehaviour
             return;
 
         insideColliders.Add(target);
-        Debug.Log($"Flashlight2D 감지: {target.name}");
+//        Debug.Log($"Flashlight2D 감지: {target.name}");
         parent.NotifyTargetEnter(target);
     }
 
@@ -361,9 +332,46 @@ public class Flashlight2DVisual : MonoBehaviour
         if (target == null) return; // 이미 파괴된 오브젝트일 수 있음
 
         insideColliders.Remove(target);
-        Debug.Log($"Flashlight2D 벗어남: {target.name}");
+//        Debug.Log($"Flashlight2D 벗어남: {target.name}");
         parent.NotifyTargetExit(target);
     }
 
-#endregion
+    #endregion
+
+
+    /// <summary>
+    /// 현재 폴리곤 콜라이더(손전등 콘) 범위 안의 Enemy 레이어 콜라이더들을 모아
+    /// EnemyController.Die()를 1회씩 호출한다.
+    /// </summary>
+    public int ExecuteEnemyCullBurst(LayerMask enemyMask)
+    {
+        if (!Application.isPlaying || polyCollider == null || !polyCollider.enabled)
+            return 0;
+
+        // 폴리곤과 겹치는 콜라이더 수집
+        var filter = new ContactFilter2D { useTriggers = true };
+        filter.SetLayerMask(enemyMask);
+
+        var results = new List<Collider2D>();
+        Physics2D.OverlapCollider(polyCollider, filter, results);
+
+        // 동일 개체에 콜라이더가 여럿 붙어 있어도 한 번만 처리
+        var uniqueEnemies = new HashSet<EnemyController>();
+        foreach (var col in results)
+        {
+            if (col == null) continue;
+            var enemy = col.GetComponentInParent<EnemyController>() ?? col.GetComponent<EnemyController>();
+            if (enemy != null) uniqueEnemies.Add(enemy);
+        }
+
+        int count = 0;
+        foreach (var e in uniqueEnemies)
+        {
+            e.Die();
+            count++;
+        }
+        
+        return count;
+    }
+
 }

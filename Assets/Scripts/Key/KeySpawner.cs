@@ -1,181 +1,154 @@
-using System.Collections;
-using System.Collections.Generic;
+// Assets/Scripts/Stage/KeySpawner.cs
+using System;
 using UnityEngine;
-using UnityEngine.Pool;
 
-[DisallowMultipleComponent]
 public class KeySpawner : MonoBehaviour
 {
-    [Header("Spawn Settings (Keys only)")]
-    [Tooltip("랜덤으로 뽑힐 키 프리팹들. 4개 권장.")]
-    [SerializeField] private List<GameObject> keyPrefabs = new List<GameObject>(4);
-
-    [Tooltip("키 전용 스폰 간격(초). ItemSpawner와 독립.")]
-    [SerializeField, Min(0.05f)] private float spawnInterval = 3f;
-
-    [Tooltip("동시에 존재 가능한 키 최대 개수")]
-    [SerializeField, Min(0)] private int maxKeys = 6;
-
-    [Tooltip("카메라 중심에서 반경으로 스폰")]
-    [SerializeField, Min(0f)] private float spawnDistance = 12f;
-
-    [Tooltip("스폰 지점이 카메라 밖인 경우만 생성")]
-    [SerializeField] private bool outsideCameraOnly = true;
-
-    [Header("Despawn Settings")]
-    [Tooltip("플레이어와 이 거리보다 멀어지면 자동 반환")]
-    [SerializeField, Min(0f)] private float despawnDistance = 25f;
-
-    [Tooltip("수명 제한(초). 음수면 비활성)")]
-    [SerializeField] private float optionalMaxLifetime = -1f;
-
-    [Header("Pool Settings")]
-    [SerializeField, Min(0)] private int defaultPoolCapacity = 8;
-    [SerializeField, Min(1)] private int maxPoolSize = 24;
-
-    [Header("Refs")]
-    [SerializeField] private string playerTag = "Player";
-
-    private Camera mainCamera;
-    private Transform player;
-    private ObjectPool<GameObject> pool;
-    private int currentKeyCount;
-
-    public static KeySpawner Instance { get; private set; }
-
-    void Awake()
+    [Serializable]
+    public struct KeyPrefab
     {
-        if (Instance == null) Instance = this;
-        else { Destroy(gameObject); return; }
-
-        pool = new ObjectPool<GameObject>(
-            createFunc: CreateKey,
-            actionOnGet: OnGetKey,
-            actionOnRelease: OnReleaseKey,
-            actionOnDestroy: OnDestroyKey,
-            collectionCheck: true,
-            defaultCapacity: defaultPoolCapacity,
-            maxSize: maxPoolSize
-        );
+        public KeyKind kind;
+        public GameObject prefab;
     }
 
-    void Start()
+    [Serializable]
+    public struct StageWeights
     {
-        mainCamera = Camera.main;
-
-        var playerGO = GameObject.FindGameObjectWithTag(playerTag);
-        if (playerGO != null) player = playerGO.transform;
-        else Debug.LogWarning("[KeySpawner] Player 태그 오브젝트를 찾지 못했습니다.");
-
-        StartCoroutine(SpawnLoop());
+        public int stage;
+        [Min(0)] public float circle;
+        [Min(0)] public float clover;
+        [Min(0)] public float heart;
+        [Min(0)] public float square;
     }
 
-    // --- Pool callbacks ---
-    private GameObject CreateKey()
+    [Header("Prefabs")]
+    [SerializeField] private KeyPrefab[] keyPrefabs;
+
+    [Header("Weights by Stage")]
+    [Tooltip("스테이지별 기본 가중치. 요구 키엔 requiredMultiplier가 곱해진다.")]
+    [SerializeField] private StageWeights[] stageWeights;
+
+    [Header("Bias")]
+    [Tooltip("요구 키에 곱해줄 배수. 예: 2면 요구 키 가중치가 두 배")]
+    [SerializeField] private float requiredMultiplier = 2f;
+
+    [Header("Spawn")]
+    [SerializeField] private float spawnInterval = 2.5f;
+    [SerializeField] private int maxAlive = 12;
+    [SerializeField] private float radiusFromCamera = 7f;
+    [SerializeField] private Transform spawnRoot; // 생성물 부모
+
+    private float timer;
+
+    private void Awake()
     {
-        if (keyPrefabs == null || keyPrefabs.Count == 0)
+        if (!spawnRoot) spawnRoot = this.transform;
+    }
+
+    private void OnEnable()
+    {
+        KeyStageContext.RequirementsChanged += OnRequirementsChanged;
+    }
+    private void OnDisable()
+    {
+        KeyStageContext.RequirementsChanged -= OnRequirementsChanged;
+    }
+
+    private void Start()
+    {
+        // 처음 한 번 확률 로그
+        LogCurrentProbabilities();
+    }
+
+    private void Update()
+    {
+        timer += Time.deltaTime;
+        if (timer < spawnInterval) return;
+        timer = 0f;
+
+        if (spawnRoot != null && spawnRoot.childCount >= maxAlive) return;
+
+        var kind = SampleKind();
+        var prefab = GetPrefab(kind);
+        if (!prefab) return;
+
+        var pos = PickSpawnPosNearCamera();
+        var go = Instantiate(prefab, pos, Quaternion.identity, spawnRoot);
+
+        // 스폰마다 확률 로그
+        LogCurrentProbabilities();
+    }
+
+    private void OnRequirementsChanged()
+    {
+        // 필요 시 즉시 리액트할 로직이 있으면 여기에
+        LogCurrentProbabilities();
+    }
+
+    private GameObject GetPrefab(KeyKind kind)
+    {
+        for (int i = 0; i < keyPrefabs.Length; i++)
+            if (keyPrefabs[i].kind == kind) return keyPrefabs[i].prefab;
+        return null;
+    }
+
+    private Vector3 PickSpawnPosNearCamera()
+    {
+        var cam = Camera.main;
+        Vector3 center = cam ? cam.transform.position : Vector3.zero;
+        float ang = UnityEngine.Random.Range(0f, Mathf.PI * 2f);
+        var offset = new Vector3(Mathf.Cos(ang), Mathf.Sin(ang), 0f) * radiusFromCamera;
+        var p = center + offset;
+        p.z = 0f;
+        return p;
+    }
+
+    private StageWeights GetWeightsFor(int stage)
+    {
+        for (int i = 0; i < stageWeights.Length; i++)
+            if (stageWeights[i].stage == stage) return stageWeights[i];
+
+        // 기본값: 균등
+        return new StageWeights
         {
-            Debug.LogError("[KeySpawner] keyPrefabs 비어있음.");
-            return new GameObject("Key_MissingPrefab");
-        }
-
-        // 4개 중 랜덤
-        var prefab = keyPrefabs[Random.Range(0, keyPrefabs.Count)];
-        if (prefab == null)
-        {
-            Debug.LogError("[KeySpawner] null prefab 발견. 리스트 확인 바람.");
-            return new GameObject("Key_NullPrefab");
-        }
-
-        var go = Instantiate(prefab);
-        go.SetActive(false);
-
-        // 거리 기반 자동 반환용 컴포넌트 보장
-        if (!go.TryGetComponent<PooledItem>(out _))
-            go.AddComponent<PooledItem>();
-
-        return go;
+            stage = stage,
+            circle = 1, clover = 1, heart = 1, square = 1
+        };
     }
 
-    private void OnGetKey(GameObject key)
+    private KeyKind SampleKind()
     {
-        key.SetActive(true);
-        currentKeyCount = Mathf.Max(0, currentKeyCount + 1);
+        int stage = KeyStageContext.CurrentStage;
+        var w = GetWeightsFor(stage);
 
-        // 플레이어 거리 체크와 풀 반환 콜백 세팅
-        var pooled = key.GetComponent<PooledItem>();
-        pooled.Setup(
-            player,
-            despawnDistance,
-            ReleaseKey,          // 멀어지면 스스로 풀로 돌아가도록
-            optionalMaxLifetime  // 음수면 수명 제한 없음
-        );
+        float wc = w.circle * (KeyStageContext.IsRequired(KeyKind.Circle) ? requiredMultiplier : 1f);
+        float wv = w.clover * (KeyStageContext.IsRequired(KeyKind.Clover) ? requiredMultiplier : 1f);
+        float wh = w.heart  * (KeyStageContext.IsRequired(KeyKind.Heart)  ? requiredMultiplier : 1f);
+        float ws = w.square * (KeyStageContext.IsRequired(KeyKind.Square) ? requiredMultiplier : 1f);
+
+        float sum = wc + wv + wh + ws;
+        if (sum <= 0f) { wc = wv = wh = ws = 1f; sum = 4f; }
+
+        float r = UnityEngine.Random.value * sum;
+        if ((r -= wc) < 0f) return KeyKind.Circle;
+        if ((r -= wv) < 0f) return KeyKind.Clover;
+        if ((r -= wh) < 0f) return KeyKind.Heart;
+        return KeyKind.Square;
     }
 
-    private void OnReleaseKey(GameObject key)
+    private void LogCurrentProbabilities()
     {
-        key.SetActive(false);
-        currentKeyCount = Mathf.Max(0, currentKeyCount - 1);
+        int stage = KeyStageContext.CurrentStage;
+        var w = GetWeightsFor(stage);
+
+        float wc = w.circle * (KeyStageContext.IsRequired(KeyKind.Circle) ? requiredMultiplier : 1f);
+        float wv = w.clover * (KeyStageContext.IsRequired(KeyKind.Clover) ? requiredMultiplier : 1f);
+        float wh = w.heart  * (KeyStageContext.IsRequired(KeyKind.Heart)  ? requiredMultiplier : 1f);
+        float ws = w.square * (KeyStageContext.IsRequired(KeyKind.Square) ? requiredMultiplier : 1f);
+
+        float sum = wc + wv + wh + ws;
+        if (sum <= 0f) sum = 1f;
+
+        Debug.Log($"[KeySpawner] Stage {stage} probs | Circle {(wc/sum):0.00}, Clover {(wv/sum):0.00}, Heart {(wh/sum):0.00}, Square {(ws/sum):0.00}");
     }
-
-    private void OnDestroyKey(GameObject key)
-    {
-        Destroy(key);
-    }
-
-    private void ReleaseKey(GameObject go)
-    {
-        if (go != null) pool.Release(go);
-    }
-
-    // --- Spawning ---
-    private IEnumerator SpawnLoop()
-    {
-        var wait = new WaitForSeconds(spawnInterval);
-        while (enabled)
-        {
-            yield return wait;
-
-            if (currentKeyCount >= maxKeys) continue;
-
-            Vector2 spawnPos = GetRandomSpawnPosition();
-            if (!outsideCameraOnly || IsOutsideCameraView(spawnPos))
-            {
-                SpawnKey(spawnPos);
-            }
-        }
-    }
-
-    private Vector2 GetRandomSpawnPosition()
-    {
-        Vector2 center = mainCamera != null ? (Vector2)mainCamera.transform.position : Vector2.zero;
-        float angle = Random.Range(0f, 360f) * Mathf.Deg2Rad;
-        return new Vector2(
-            center.x + Mathf.Cos(angle) * spawnDistance,
-            center.y + Mathf.Sin(angle) * spawnDistance
-        );
-    }
-
-    private bool IsOutsideCameraView(Vector2 worldPos)
-    {
-        if (mainCamera == null) return true;
-        Vector3 vp = mainCamera.WorldToViewportPoint(worldPos);
-        return vp.x < 0 || vp.x > 1 || vp.y < 0 || vp.y > 1;
-    }
-
-    private void SpawnKey(Vector2 position)
-    {
-        var key = pool.Get();
-        key.transform.SetPositionAndRotation(position, Quaternion.identity);
-    }
-
-#if UNITY_EDITOR
-    void OnDrawGizmosSelected()
-    {
-        if (mainCamera == null) mainCamera = Camera.main;
-        Vector3 c = mainCamera ? mainCamera.transform.position : transform.position;
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(c, spawnDistance);
-    }
-#endif
 }

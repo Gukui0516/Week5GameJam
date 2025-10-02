@@ -1,17 +1,16 @@
-﻿using UnityEngine;
+using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public enum GameState { Boot, Playing, Paused, GameOver }
 
 [DefaultExecutionOrder(-1000)]
 public class GameManager : MonoBehaviour
 {
-
     public static GameManager Instance { get; private set; }
 
     [Header("상태")]
     [SerializeField] private GameState current = GameState.Boot;
     public GameState Current => current;
-
 
     [Header("설정")]
     [SerializeField, Tooltip("게임 시작 시 타이틀로 진입할지")]
@@ -22,14 +21,21 @@ public class GameManager : MonoBehaviour
     private int currentStage = 1;
     public int CurrentStage => currentStage;
 
-
     public bool IsPaused => current == GameState.Paused;
+
     private SceneDirector sceneDirector;
+
     [Header("UI 참조")]
     public GameOverUI gameOverUI;
+    public EndingUI endingUI; // EndingUI가 Awake에서 자동 등록
 
+    [Header("Ending (단순 표시)")]
+    [SerializeField] private int endingStage = 4;        // 해당 스테이지 도달 시 엔딩
+    [SerializeField] private string endingMessage = "You Escaped.";
 
-    void Awake()
+    private bool endingShown = false;
+
+    private void Awake()
     {
         if (Instance != null && Instance != this)
         {
@@ -39,21 +45,35 @@ public class GameManager : MonoBehaviour
         Instance = this;
         DontDestroyOnLoad(gameObject);
 
-        if (sceneDirector == null)
+        if (!sceneDirector)
             sceneDirector = GetComponent<SceneDirector>();
+
+        // 씬 로드시 EndingUI 자동 재바인딩
+        SceneManager.sceneLoaded += OnSceneLoaded_Rebind;
     }
 
-    void Start()
+    private void OnDestroy()
     {
-        if (enterTitleOnBoot)
+        SceneManager.sceneLoaded -= OnSceneLoaded_Rebind;
+    }
+
+    private void Start()
+    {
+        if (enterTitleOnBoot) GoTitle();
+        else StartNewGame();
+    }
+
+    private void OnSceneLoaded_Rebind(Scene s, LoadSceneMode mode)
+    {
+        // EndingUI가 씬 오브젝트라면, 씬 전환 시 새 오브젝트를 다시 잡아준다.
+        if (!endingUI)
         {
-            GoTitle();
+            var hook = FindObjectOfType<EndingUI>(true);
+            if (hook) endingUI = hook;
         }
-        else
-        {
-            StartNewGame();
-        }
-        Debug.Log("st");
+
+        // 씬 진입 시엔 엔딩 UI는 숨김 상태가 자연스럽다.
+        if (endingUI) endingUI.HideImmediate();  // ← Hide() 대신 HideImmediate() 권장
     }
 
     // ======= 공개 API =======
@@ -62,36 +82,50 @@ public class GameManager : MonoBehaviour
     {
         current = GameState.Boot;
         currentStage = 1;
+        endingShown = false;
+
+        if (endingUI) endingUI.Hide();
+
         sceneDirector.LoadGame();
         current = GameState.Playing;
         Resume();
-        Debug.Log("StartNewGame");
     }
 
     public void GoTitle()
     {
         current = GameState.Boot;
+        endingShown = false;
+
+        if (endingUI) endingUI.Hide();
+
         sceneDirector.LoadTitle();
         Resume();
     }
 
     public void Restart()
     {
-        // 현재 싱글씬이 게임씬이라고 가정
         StartNewGame();
     }
 
-    // 현재 스테이지를 유지한 채 게임 씬 재로드
+    // 현재 스테이지 유지한 채 게임 씬 재로드
     public void ReloadStage()
     {
         if (current == GameState.GameOver) return;
         sceneDirector.LoadGame();
     }
 
-    // 스테이지 +1 올리고 같은 게임 씬 다시 로드
+    // 스테이지 +1 올리고 같은 게임 씬 재로드
+    // 예: 3 클리어 → 호출되면 currentStage=4 → 즉시 엔딩 표시
     public void AdvanceStageAndReload()
     {
         currentStage = Mathf.Max(1, currentStage + 1);
+
+        if (!endingShown && currentStage >= endingStage)
+        {
+            PlayEnding();
+            return;
+        }
+
         sceneDirector.LoadGame();
     }
 
@@ -100,7 +134,6 @@ public class GameManager : MonoBehaviour
         if (IsPaused) return;
         Time.timeScale = 0f;
         current = GameState.Paused;
-        // 입력 락 등 훅 추가 지점
     }
 
     public void Resume()
@@ -120,29 +153,37 @@ public class GameManager : MonoBehaviour
 
     public void QuitGame()
     {
-        // 게임 종료
-        #if UNITY_EDITOR
-            UnityEditor.EditorApplication.isPlaying = false;
-        #else
-            Application.Quit();
-        #endif
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+        Application.Quit();
+#endif
     }
-    /*
-    public class DifficultyScaler : MonoBehaviour
+
+    // ======= 엔딩: 단순 즉시 표시 =======
+
+    private void PlayEnding()
     {
-        void Start()
+        if (endingShown) return;
+        endingShown = true;
+
+        // 상태 전환 & 정지
+        current = GameState.GameOver;
+        Time.timeScale = 0f;
+
+        // EndingUI가 비어있다면 한 번 더 찾아본 후 표시
+        if (!endingUI)
         {
-            int stage = GameManager.Instance != null ? GameManager.Instance.CurrentStage : 1;
-            ApplyDifficulty(stage);
+            endingUI = FindObjectOfType<EndingUI>(true);
         }
 
-        void ApplyDifficulty(int stage)
+        if (endingUI)
         {
-            // 스테이지별 난이도/가격/스폰 테이블 등 적용
+            endingUI.Show(endingMessage);
+        }
+        else
+        {
+            Debug.LogError("[GameManager] EndingUI not found/bound. Place an EndingUI in the scene or bind a persistent prefab.");
         }
     }
-
-    //다른 클래스에서 사용 시 이런식으로 인스턴스를 받아와 현재 스테이지 int정보를 가져와 초기화 처리하면 됨.
-
-    */
 }
