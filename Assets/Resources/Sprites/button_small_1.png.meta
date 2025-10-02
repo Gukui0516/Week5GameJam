@@ -37,7 +37,7 @@ TextureImporter:
   maxTextureSize: 2048
   textureSettings:
     serializedVersion: 2
-    filterMode: 1
+    filterMode: 0
     aniso: 1
     mipBias: 0
     wrapU: 1
@@ -103,19 +103,19 @@ TextureImporter:
       name: button_small_1_0
       rect:
         serializedVersion: 2
-        x: 0
-        y: 0
-        width: 26
-        height: 28
+        x: 2
+        y: 4
+        width: 22
+        height: 22
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 747b0cb15a0303780800000000000000
+      spriteID: 05894594a2b2f2946b867f4a5c66c841
       internalID: -8705404594013817017
       vertices: []
       indices: 
@@ -125,7 +125,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID: 184aa372eced057429ea81602d78eb2f
     internalID: 0
     vertices: []
     indices: 
