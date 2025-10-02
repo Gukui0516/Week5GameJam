@@ -5,21 +5,15 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 0
-    path: Assets/Scenes/SampleScene.unity
-    guid: 8c9cfa26abfee488c85f1582747f6a02
-  - enabled: 0
-    path: Assets/Scenes/FlashLight_Juyoung.unity
-    guid: cefb99cf95879514f9d7674ea139c05d
   - enabled: 1
     path: Assets/Scenes/TempStart.unity
     guid: 09b6d6d068a4ec34396f27dd63a4d17b
-  - enabled: 0
-    path: Assets/Scenes/DevelopTestJM.unity
-    guid: 440862610c530064cb9ef467575b0b9f
   - enabled: 1
     path: Assets/Scenes/DevelopTest.unity
     guid: 148d76d55e9dc544687946b7e231ecc1
+  - enabled: 1
+    path: Assets/Scenes/TestEnd.unity
+    guid: 03d025b569c40124a8936bb2858fccae
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
   m_UseUCBPForAssetBundles: 0

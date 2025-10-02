@@ -134,19 +134,19 @@ public class EnemySpawner : MonoBehaviour
                 {
                     case 1:
                         enemyData.maxCount = 4;
-                        enemyData.spawnInterval = 3f;
+                        enemyData.spawnInterval = 5f;
                         break;
                     case 2:
-                        enemyData.maxCount = 8;
-                        enemyData.spawnInterval = 2.5f;
+                        enemyData.maxCount = 6;
+                        enemyData.spawnInterval = 4f;
                         break;
                     case 3:
-                        enemyData.maxCount = 12;
-                        enemyData.spawnInterval = 2f;
+                        enemyData.maxCount = 8;
+                        enemyData.spawnInterval = 3f;
                         break;
                     default:
                         enemyData.maxCount = 4;
-                        enemyData.spawnInterval = 3f;
+                        enemyData.spawnInterval = 5f;
                         break;
                 }
             }
@@ -160,11 +160,11 @@ public class EnemySpawner : MonoBehaviour
                         break;
                     case 2:
                         enemyData.maxCount = 2;
-                        enemyData.spawnInterval = 2.5f;
+                        enemyData.spawnInterval = 4f;
                         break;
                     case 3:
                         enemyData.maxCount = 4;
-                        enemyData.spawnInterval = 2f;
+                        enemyData.spawnInterval = 4f;
                         break;
                     default:
                         enemyData.maxCount = 0;
