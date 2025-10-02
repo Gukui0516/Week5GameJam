@@ -294,7 +294,7 @@ MonoBehaviour:
   lightSeekerBaseSpeed: 1
   speedIncreaseRate: 1.2
   speedIncreaseInterval: 0.1
-  maxSpeed: 16
+  maxSpeed: 12
   despawnDistance: 25
   despawnCheckInterval: 1
   useOutline: 1
