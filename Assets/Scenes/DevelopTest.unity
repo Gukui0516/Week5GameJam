@@ -1743,6 +1743,18 @@ PrefabInstance:
       value: "\uD0A4\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4: {0}"
       objectReference: {fileID: 0}
     - target: {fileID: 7471772654331105223, guid: 8c2dfe386c0026e49a1c668c4a711adb, type: 3}
+      propertyPath: stage1Distance
+      value: 70
+      objectReference: {fileID: 0}
+    - target: {fileID: 7471772654331105223, guid: 8c2dfe386c0026e49a1c668c4a711adb, type: 3}
+      propertyPath: stage2Distance
+      value: 80
+      objectReference: {fileID: 0}
+    - target: {fileID: 7471772654331105223, guid: 8c2dfe386c0026e49a1c668c4a711adb, type: 3}
+      propertyPath: stage3Distance
+      value: 100
+      objectReference: {fileID: 0}
+    - target: {fileID: 7471772654331105223, guid: 8c2dfe386c0026e49a1c668c4a711adb, type: 3}
       propertyPath: InteractImageObj
       value: 
       objectReference: {fileID: 398081907}
