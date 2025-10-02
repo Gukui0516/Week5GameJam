@@ -4,7 +4,7 @@ public class PlayerContact : MonoBehaviour
 {
     [SerializeField] CircleCollider2D checkRadius;
     bool isContact = false;
-    LayerMask enemyLayer;
+    public LayerMask enemyLayer;
     bool isInverted = false;
     private WorldStateManager worldStateManager;
     private void Awake()
@@ -31,27 +31,29 @@ public class PlayerContact : MonoBehaviour
         Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, checkRadius.radius);
         foreach (Collider2D hit in hits)
         {
-            if(isContact) break;
-            if (hit.gameObject.layer == enemyLayer)
+            //Debug.Log(isContact + " " + hit.gameObject.layer + " " + enemyLayer);
+            if (isContact) break;
+            // 올바른 레이어 비교 방식
+            if ((enemyLayer.value & (1 << hit.gameObject.layer)) != 0)
             {
                 if (hit.gameObject.CompareTag("Enemy"))
                 {
                     if (worldStateManager.IsInverted == true)
                         return;
                     Debug.Log(hit.gameObject.name);
-                    GetComponentInChildren<Flashlight2D>().isOn = false ;
+                    GetComponentInChildren<Flashlight2D>().isOn = false;
                     GameManager.Instance.GameOver();
                     isContact = true;
                 }
                 else if (hit.gameObject.CompareTag("EnemyWhite"))
                 {
-                    //Debug.Log(hit.gameObject.name);
-                    GetComponentInChildren<Flashlight2D>().isOn = false ;
+                    Debug.Log(hit.gameObject.name);
+                    GetComponentInChildren<Flashlight2D>().isOn = false;
                     GameManager.Instance.GameOver();
                     isContact = true;
                 }
-
             }
+            
             if (hit.gameObject.CompareTag("Item"))
             {
                 Debug.Log("아이템 " + hit.name + " 획득");
